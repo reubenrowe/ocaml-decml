@@ -1,0 +1,10 @@
+(jbuild_version 1)
+
+(executable
+  ((name model_building)
+   (libraries (decml))))
+
+(alias 
+  ((name test-model_building)
+   (deps (model_building.exe))
+   (action  (run ${<}))))

@@ -1,0 +1,10 @@
+(jbuild_version 1)
+
+(executables
+  ((names (linear_regression))
+  (libraries (decml containers))))
+
+(alias 
+  ((name linear_regression_demo)
+   (deps (linear_regression.exe))
+   (action  (run ${<} -data-file ../../../examples/data/cats_data.csv))))
