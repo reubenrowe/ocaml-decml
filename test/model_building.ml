@@ -3,7 +3,7 @@ open   Model
 
 (* model m x = 1.0[@pc] * x + 0.0[@pc] *)
 let m =
-  let open Overlay in
+  let open Overlay.Pervasives in
   abs 
     (app 
       (app 
@@ -17,7 +17,7 @@ let m =
 
 (* model m' x = (m x, m x + 1.0) *)
 let m' = 
-  let open Overlay in
+  let open Overlay.Pervasives in
     abs
       (pair
         ((app
@@ -69,7 +69,7 @@ let m, m' =
 
 (* model m' x = (m x, m x + 1.0[@pc]) *)
 let m' = 
-  let open Overlay in
+  let open Overlay.Pervasives in
     abs
       (pair
         ((app
