@@ -25,22 +25,25 @@ module Parameters : sig
 
     (** {0 Scalar Operations} *)
 
-    val (+.) : Carrier.t -> 'a t -> 'a t
+    val (<+.>) : Carrier.t -> 'a t -> 'a t
     (** Scalar addition to a parameter vector. *)
 
-    val ( *. ) : Carrier.t -> 'a t -> 'a t
+    val (<*.>) : Carrier.t -> 'a t -> 'a t
     (** Scalar multiplicat of a parameter vector. *)
 
     (** {0 Vector Operations} *)
 
-    val (+) : 'a t -> 'a t -> 'a t
+    val (<+>) : 'a t -> 'a t -> 'a t
     (** Pointwise addition of two parameter vectors. *)
 
-    val ( * ) : 'a t -> 'a t -> 'a t
+    val (<*>) : 'a t -> 'a t -> 'a t
     (** Pointwise multiplication of two parameter vectors. *)
 
     val (<.>) : 'a t -> 'a t -> Carrier.t
     (** Dot product of two parameter vectors. *)
+
+    val (~<>) : 'a t -> 'a t
+    (** Reflection of a parameter vector. *)
 
   end
 
@@ -52,10 +55,6 @@ module Parameters : sig
   val mult : Carrier.t -> 'a t -> 'a t
   (** Scalar multiplication of a parameter vector. *)
 
-  val refl : 'a t -> 'a t
-  (** Scalar reflection of a parameter vector: [refl ps] is equivalent to
-      [mult (-1.0) ps]. *)
-
   (** {1 Vector Operations} *)
 
   val plus : 'a t -> 'a t -> 'a t
@@ -66,6 +65,10 @@ module Parameters : sig
 
   val dot : 'a t -> 'a t -> Carrier.t
   (** Dot product of two parameter vectors. *)
+
+  val refl : 'a t -> 'a t
+  (** Reflection of a parameter vector: [refl ps] is equivalent to
+      [mult (-1.0) ps]. *)
 
 end
 

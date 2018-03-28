@@ -2,6 +2,7 @@ open Containers.List
 
 open Model
 open   Parameters
+open     Infix
 
 type ('a, 'b) loss_function = ('a -> 'b) -> 'a Data.t -> Carrier.t
 
@@ -47,10 +48,11 @@ let rec grad_desc ~loss_f ~rate ~epochs ~model params data =
       let f ps = loss_f (model ps) [x] in
       map 
         (fun b -> 
+          let b = !dx <*.> b in
           let df = 
-            ((f (plus params b) -. f (plus params (refl b))) /. 0.00002) in
-          mult (rate *. df) (refl b))
-        (map (mult !dx) (bases params)) in
+            ((f (params <+> b) -. f (params <+> (~<> b))) /. (2.0 *. !dx)) in
+          -.(rate *. df) <*.> b)
+        (bases params) in
    let params = fold_left plus params dfs in
    let epochs = epochs - 1 in
    grad_desc ~loss_f ~rate ~epochs ~model params data

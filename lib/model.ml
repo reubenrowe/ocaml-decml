@@ -74,11 +74,12 @@ module Parameters = struct
     Map.fold (fun _ -> (+.)) (combine ( *. ) v v') 0.0
     
   module Infix = struct
-    let (  +. ) v v' = add v v'
-    let (  *. ) v v' = mult v v'
-    let (  +  ) v v' = plus v v'
-    let (  *  ) v v' = times v v'
-    let ( <.> ) v v' = dot v v'
+    let (<+.>) v v' = add v v'
+    let (<*.>) v v' = mult v v'
+    let (<+>) v v' = plus v v'
+    let (<*>) v v' = times v v'
+    let (<.>) v v' = dot v v'
+    let (~<>) v = refl v
   end
     
 end
