@@ -39,14 +39,14 @@ let m, m' =
   let Ex (m, p) = m in
   let Ex (m', p') = m' in
   let m = rebind m p' in
-    (* line 40, characters 19-21:
+    (* line 41, characters 19-21:
        This expression has type
          $Ex_'c1 Lib.Model.Parameters.t = $Ex_'c1 Lib__Model.Parameters.t
        but an expression was expected of type
          $Ex_'c Lib.Model.Parameters.t = $Ex_'c Lib__Model.Parameters.t
        Type $Ex_'c1 is not compatible with type $Ex_'c *)
   let m' = rebind m' p in
-    (* line 47, characters 21-22:
+    (* line 48, characters 21-22:
        This expression has type
          $Ex_'c Lib.Model.Parameters.t = $Ex_'c Lib__Model.Parameters.t
        but an expression was expected of type
