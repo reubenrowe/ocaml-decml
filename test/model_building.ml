@@ -171,6 +171,17 @@ let f, g =
   rebind m p, rebind m' p' 
 *)
 
+let m = 
+  let%model 
+      m x = x
+  and n y = y in
+  abs (pair ((app (tx Weak m) var), (app (tx Weak n) var)))
+
+let m = 
+  let%model m x = x in
+  let%model n y = y in
+  abs (pair ((app (tx Weak m) var), (app (tx Weak n) var)))
+
 ;;
 
 let x = f 2.0 in
