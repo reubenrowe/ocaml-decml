@@ -11,10 +11,41 @@ let m =
         (app 
           (app 
             (tx Weak ( *. )) 
-            (tx Weak (pc ~init:1.0 ()))) 
+            (tx Weak (pc ~init:"1.0" ()))) 
           (var))) 
-      (tx Weak (pc ~init:0.0 ())))
+      (tx Weak (pc ~init:"0.0" ())))
 
+let m =
+  let open Overlay.Pervasives in
+  abs 
+    (app 
+      (app 
+        (tx Weak (+.)) 
+        (app (app (tx Weak ( *. )) (tx Weak [%pc 1])) (var))) 
+      (tx Weak [%pc 0]))
+
+let m =
+  let%pc a = 1 
+      and b = 0 in
+  let open Overlay.Pervasives in
+  abs 
+    (app 
+      (app 
+        (tx Weak (+.)) 
+        (app (app (tx Weak ( *. )) (tx Weak a)) (var))) 
+      (tx Weak b))
+      
+let m =
+  let%pc a = 1 in
+  let%pc b = 0 in
+  let open Overlay.Pervasives in
+  abs 
+    (app 
+      (app 
+        (tx Weak (+.)) 
+        (app (app (tx Weak ( *. )) (tx Weak a)) (var))) 
+      (tx Weak b))
+            
 (* model m' x = (m x, m x + 1.0) *)
 let m' = 
   let open Overlay.Pervasives in
@@ -39,15 +70,13 @@ let m, m' =
   let Ex (m, p) = m in
   let Ex (m', p') = m' in
   let m = rebind m p' in
-    (* line 41, characters 19-21:
-       This expression has type
+    (* This expression [p'] has type
          $Ex_'c1 Lib.Model.Parameters.t = $Ex_'c1 Lib__Model.Parameters.t
        but an expression was expected of type
          $Ex_'c Lib.Model.Parameters.t = $Ex_'c Lib__Model.Parameters.t
        Type $Ex_'c1 is not compatible with type $Ex_'c *)
   let m' = rebind m' p in
-    (* line 48, characters 21-22:
-       This expression has type
+    (* This expression [p] has type
          $Ex_'c Lib.Model.Parameters.t = $Ex_'c Lib__Model.Parameters.t
        but an expression was expected of type
          $Ex_'c1 Lib.Model.Parameters.t = $Ex_'c1 Lib__Model.Parameters.t
@@ -72,16 +101,20 @@ let m' =
   let open Overlay.Pervasives in
     abs
       (pair
-        ((app
-          (tx Weak m)
-          (var)),
+        ((app (tx Weak m) (var)),
         (app 
-          (app (tx Weak (+.))
-            (app
-              (tx Weak m)
-              (var)))
-          (tx Weak (pc ~init:1.0 ())))))
-   
+          (app (tx Weak (+.)) (app (tx Weak m) (var)))
+          (tx Weak (pc ~init:"1.0" ())))))
+
+let m' = 
+  let open Overlay.Pervasives in
+    abs
+      (pair
+        ((app (tx Weak m) (var)),
+        (app 
+          (app (tx Weak (+.)) (app (tx Weak m) (var)))
+          (tx Weak [%pc 1]))))
+          
 let m, m' =
   let Ex (m, p) = m in
   let Ex (m', p') = m' in

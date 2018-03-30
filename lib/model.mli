@@ -112,7 +112,7 @@ val lift_lazy : (unit -> 'a) -> (unit, 'a) t
 
 (** {1 Basic Abductive Calculus} *)
 
-val pc : ?init:Carrier.t -> unit -> (unit, Carrier.t) t
+val pc : ?init:string -> unit -> (unit, Carrier.t) t
 (** Return a model consisting of a single fresh provisional constant. *)
 
 val var : (('a * unit), 'a) t

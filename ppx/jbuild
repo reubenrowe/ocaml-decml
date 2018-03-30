@@ -4,5 +4,5 @@
   ((name decml_ppx)
    (public_name decml.ppx)
    (kind ppx_rewriter)
-   (libraries (ocaml-migrate-parsetree))
+   (libraries (ocaml-migrate-parsetree containers))
   ))

@@ -116,9 +116,10 @@ let rebind_open
 
 (* Combinators for building models *)
 
-let pc ?(init=0.0) () =
+let pc ?(init="0.0") () =
   let key = Key.get_fresh () in
   let model = fun (params, ()) -> Option.get_exn (Map.get key params) in
+  let init = Carrier.of_string init in
   let params = Map.singleton key init in
   Ex (Boxed (M model), Parameters.P params)
 
