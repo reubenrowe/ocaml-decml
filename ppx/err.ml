@@ -15,6 +15,8 @@ let const_exp loc =
   Location.raise_errorf ~loc "Expecting a single constant expression!"
 let decouple loc =
   Location.raise_errorf ~loc "Expecting a variable pair pattern!"
+let rec_model loc =
+  Location.raise_errorf ~loc "Recursive let not supported for models!"
 
 let mapper loc = 
   Location.raise_errorf ~loc "Not supported in models!"

@@ -172,7 +172,13 @@ let f, g =
 *)
 
 let m = 
-  let%model 
+  let%model rec
+      m x = x
+  and n y = y in
+  abs (pair ((app (tx Weak m) var), (app (tx Weak n) var)))
+
+let m = 
+  let%model
       m x = x
   and n y = y in
   abs (pair ((app (tx Weak m) var), (app (tx Weak n) var)))

@@ -82,6 +82,10 @@ let dest_model_ext =
       when is_model_ext txt ->
     begin match payload with
     | PStr [{ pstr_desc = Pstr_eval ( 
+          { pexp_desc = Pexp_let (Recursive, _, _) },
+        _)}] ->
+      Err.rec_model pexp_loc
+    | PStr [{ pstr_desc = Pstr_eval ( 
           { pexp_desc = Pexp_let (_, bindings, cont) }, 
         _)}] ->
       let bindings =
