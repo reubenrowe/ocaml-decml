@@ -63,15 +63,14 @@ let dest_lift_ext =
       let bindings =
         List.map
           (function
-            | { pvb_pat = { ppat_desc = Ppat_var _ }; 
-                pvb_expr } as pvb ->
-              Some pvb, (pvb_expr, pvb_expr.pexp_loc)
+            | { pvb_pat = { ppat_desc = Ppat_var _ }; pvb_loc } as pvb ->
+              Some pvb, (None, pvb_loc)
             | { pvb_loc } ->
               Err.pattern pvb_loc)
           (bindings) in
       Some (bindings, Some cont)
     | PStr [{ pstr_desc = Pstr_eval (({ pexp_loc } as e), _) } ] ->
-      Some ([(None, (e, pexp_loc))], None)
+      Some ([(None, (Some e, pexp_loc))], None)
     | _ ->
       Err.payload pexp_loc
     end
@@ -85,14 +84,43 @@ let dest_model_ext =
     failwith "Not implemented yet!"
   | _ ->
     None
-    
+
+let dest_decouple_ext =
+  function
+  | { pexp_desc = Pexp_extension ({ txt }, payload); pexp_loc } 
+      when is_decouple_ext txt ->
+    begin match payload with
+    | PStr [{ pstr_desc = Pstr_eval ( 
+          { pexp_desc = Pexp_let (_, bindings, cont) }, 
+        _)}] ->
+      let () =
+        List.iter
+          (function
+            | { pvb_pat = { 
+                  ppat_desc = Ppat_tuple [
+                    { ppat_desc = Ppat_var _ } ; 
+                    { ppat_desc = Ppat_var _ } ; ] }; 
+                pvb_expr; pvb_loc } ->
+              ()
+            | { pvb_loc } ->
+              Err.decouple pvb_loc)
+          (bindings) in
+      Some (bindings, cont)
+    | _ ->
+      Err.payload pexp_loc
+    end
+  | _ ->
+    None
+        
 let dest_ext expr =
-  match dest_pc_ext expr    with Some res ->
+  match dest_pc_ext expr       with Some res ->
     `PC res | _ ->
-  match dest_lift_ext expr  with Some res ->
+  match dest_lift_ext expr     with Some res ->
     `LIFT res | _ ->
-  match dest_model_ext expr with Some res ->
-    `MODEL res 
+  match dest_model_ext expr    with Some res ->
+    `MODEL res | _ ->
+  match dest_decouple_ext expr with Some res ->
+    `DECOUPLE res
   | _ ->
     `NOEXT
 
@@ -113,7 +141,7 @@ let rewriter _ _ =
             (bindings) in
         let cont = mapper.expr mapper (Option.get_exn cont) in
         Exp.let_ ~loc Nonrecursive bindings cont
-      | `LIFT ([(None, (e, loc))], None) ->
+      | `LIFT ([(None, (Some e, loc))], None) ->
         lift e loc
       | `LIFT (bindings, cont) ->
         let bindings = 
@@ -124,6 +152,15 @@ let rewriter _ _ =
               { vb with pvb_expr }) 
             (bindings) in
         let cont = mapper.expr mapper (Option.get_exn cont) in
+        Exp.let_ ~loc Nonrecursive bindings cont
+      | `DECOUPLE (bindings, cont) ->
+        let bindings =
+          List.map
+            (fun ({ pvb_expr } as pvb) ->
+              let model = mapper.expr mapper pvb_expr in
+              decouple pvb model)
+            (bindings) in
+        let cont = mapper.expr mapper cont in
         Exp.let_ ~loc Nonrecursive bindings cont
       | _ -> 
         default_mapper.expr mapper expr ; }

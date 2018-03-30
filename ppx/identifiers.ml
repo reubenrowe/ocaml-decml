@@ -10,16 +10,19 @@ open     Longident
 
 (* Extension node names *)
 
-let ext_model = "model"
-let ext_pc    = "pc"
-let ext_lift  = "lift"
+let ext_model    = "model"
+let ext_pc       = "pc"
+let ext_lift     = "lift"
+let ext_decouple = "decouple"
 
-let is_model_ext =
-  String.equal ext_model
-let is_pc_ext =
-  String.equal ext_pc
-let is_lift_ext =
-  String.equal ext_lift
+let is_model_ext s =
+  String.equal ext_model s
+let is_pc_ext s =
+  String.equal ext_pc s
+let is_lift_ext s =
+  String.equal ext_lift s
+let is_decouple_ext s =
+  String.equal ext_decouple s
 
 let mk_ident lid = Exp.ident (Location.mknoloc lid)
 

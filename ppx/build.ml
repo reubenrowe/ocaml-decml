@@ -30,6 +30,11 @@ let lift e loc =
     (mknoloc Model._Ex)
     (Some 
       (Exp.tuple [
-          Exp.construct (mknoloc Model._Lifted) (Some e);
-          Exp.ident (mknoloc Model.Parameters.null)
+          Exp.construct (mknoloc Model._Lifted) (Some e) ;
+          mk_ident Model.Parameters.null ;
         ]))
+
+let decouple ({ pvb_pat } as pvb) e =
+  let { ppat_loc = loc } = pvb_pat in
+  let pvb_pat = Pat.construct ~loc (mknoloc Model._Ex) (Some pvb_pat) in
+  { pvb with pvb_pat ; pvb_expr = e }

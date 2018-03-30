@@ -127,21 +127,58 @@ let m' =
           (app (tx Weak (+.)) (app (tx Weak m) (var)))
           (tx Weak [%pc 1]))))
           
-let m, m' =
+let f, g =
   let Ex (m, p) = m in
   let Ex (m', p') = m' in
-  let m = rebind m p in
-  let m' = rebind m' p' in
-  m, m'
+  rebind m p, rebind m' p'
+
+let f, g =
+  let%decouple (m, p) = m in
+  let%decouple (m', p') = m' in
+  rebind m p, rebind m' p' 
+  
+(* Note that although we support the translation of multiple decoupling
+    bindings of the form:
+    
+      let%decouple (m1, p1) = ...
+        and ...
+        and (m_n, p_n) = ... in
+      
+    the compiler gives an "Unexpected existential" error for the
+    desugaring:
+    
+      let Decml.Model.Ex (m1, p1) = ...
+        and ...
+        and Decml.Model.Ex (m_n, p_n) = ... in ...
+    
+    as documented in the following bug on Mantis:
+
+      https://caml.inria.fr/mantis/view.php?id=6014
+    
+    We set the locations so merlin can associate the error with the
+    sugared patterns. *)
+
+(* 
+let f, g =
+  let Ex (m, p) = m
+  and Ex (m', p') = m' in
+  rebind m p, rebind m' p'
+    
+let f, g =
+  let%decouple 
+      (m, p) = m
+  and (m', p') = m' in
+  rebind m p, rebind m' p' 
+*)
 
 ;;
 
-let x = m 2.0 in
+let x = f 2.0 in
 print_endline
   (Format.sprintf "%f" x)
 ;;
 
-let x, y = m' 2.0 in
+let x, y = g 2.0 in
 print_endline
   (Format.sprintf "%f, %f" x y)
 ;;
