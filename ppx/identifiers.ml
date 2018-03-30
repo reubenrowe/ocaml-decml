@@ -23,12 +23,17 @@ let is_lift_ext =
 
 let mk_ident lid = Exp.ident (Location.mknoloc lid)
 
+(* OCaml Native Identifiers *)
+let unit = Lident "()"
+
 (* Library Modules and Values *)
 
 let lib_name = Lident "Decml"
 
 module Model = struct
   let _module_name = Ldot (lib_name, "Model")
+  let _Lifted = Ldot (_module_name, "Lifted")
+  let _Ex = Ldot (_module_name, "Ex")
   module Parameters = struct
     let _module_name = Ldot (_module_name, "Parameters")
     let null = Ldot (_module_name, "null")

@@ -10,22 +10,11 @@ open     Asttypes
 open     Location
 open     Longident
 
+open Build
 open Identifiers
-open Expressions
 
 let args = []
 let reset_args () = ()
-
-let pc_err src loc = 
-  let msg = 
-    match src with
-    | `Pat ->
-      "Expecting a singleton variable pattern!"
-    | `Exp ->
-      "Expecting a single constant expression!"
-    | `Binding ->
-      "Expecting a single value or binding!" in
-  Location.raise_errorf ~loc "%s" msg
 
 let dest_exp_const =
   function
@@ -34,7 +23,7 @@ let dest_exp_const =
   | { pexp_desc = Pexp_constant Pconst_integer (c, _) } ->
     c
   | { pexp_loc } ->
-    pc_err `Exp pexp_loc
+    Err.const_exp pexp_loc
 
 let dest_pc_ext =
   function
@@ -49,20 +38,17 @@ let dest_pc_ext =
       let bindings =
         List.map
           (function
-            | { pvb_pat = { ppat_desc = Ppat_var _ }; 
-                pvb_expr } as pvb ->
+            | { pvb_pat = { ppat_desc = Ppat_var _ }; pvb_expr } as pvb ->
               Some pvb, (dest_exp_const pvb_expr, pvb_expr.pexp_loc)
             | { pvb_loc } ->
-              pc_err `Pat pvb_loc)
+              Err.pattern pvb_loc)
           (bindings) in
       Some (Some bindings, Some cont)
     | PStr [{ pstr_desc = Pstr_eval (({ pexp_loc } as e), _) } ] ->
       Some (Some [(None, (dest_exp_const e, pexp_loc))], None)
     | _ ->
-      pc_err `Binding pexp_loc
+      Err.payload pexp_loc
     end
-  | { pexp_desc = Pexp_extension ({ txt }, _) } ->
-    let () = prerr_endline txt in None
   | _ ->
     None
 
@@ -70,7 +56,25 @@ let dest_lift_ext =
   function
   | { pexp_desc = Pexp_extension ({ txt }, payload); pexp_loc } 
       when is_lift_ext txt ->
-    failwith "Not implemented yet!"
+    begin match payload with
+    | PStr [{ pstr_desc = Pstr_eval ( 
+          { pexp_desc = Pexp_let (_, bindings, cont) }, 
+        _)}] ->
+      let bindings =
+        List.map
+          (function
+            | { pvb_pat = { ppat_desc = Ppat_var _ }; 
+                pvb_expr } as pvb ->
+              Some pvb, (pvb_expr, pvb_expr.pexp_loc)
+            | { pvb_loc } ->
+              Err.pattern pvb_loc)
+          (bindings) in
+      Some (bindings, Some cont)
+    | PStr [{ pstr_desc = Pstr_eval (({ pexp_loc } as e), _) } ] ->
+      Some ([(None, (e, pexp_loc))], None)
+    | _ ->
+      Err.payload pexp_loc
+    end
   | _ ->
     None
 
@@ -92,34 +96,35 @@ let dest_ext expr =
   | _ ->
     `NOEXT
 
-let mk_pc ?init loc =
-  let loc = { loc with loc_ghost = true} in
-  let args = [ (Nolabel, unit) ] in
-  let args = 
-    match init with
-    | None ->
-      args
-    | Some c ->
-      (Labelled ("init"), Exp.constant (Const.string c)) :: args in
-  Exp.apply ~loc (mk_ident Model.pc) args
-
 let rewriter _ _ =
   { default_mapper with
-    expr = fun mapper expr ->
+    expr = fun mapper ({ pexp_loc = loc } as expr) ->
       match dest_ext expr with
       | `PC (None, None) ->
-        mk_pc expr.pexp_loc
+        prov_const expr.pexp_loc
       | `PC (Some [(None, (init, loc))], None) ->
-        mk_pc ~init loc
+        prov_const ~init loc
       | `PC (Some bindings, cont) ->
         let bindings = 
           List.map 
             (fun (vb, (init, loc)) -> 
               let vb = Option.get_exn vb in
-              { vb with pvb_expr = mk_pc ~init loc }) 
+              { vb with pvb_expr = prov_const ~init loc }) 
             (bindings) in
         let cont = mapper.expr mapper (Option.get_exn cont) in
-        Exp.let_ Nonrecursive bindings cont
+        Exp.let_ ~loc Nonrecursive bindings cont
+      | `LIFT ([(None, (e, loc))], None) ->
+        lift e loc
+      | `LIFT (bindings, cont) ->
+        let bindings = 
+          List.map 
+            (fun (vb, (init, loc)) -> 
+              let { pvb_expr } as vb = Option.get_exn vb in
+              let pvb_expr = lift pvb_expr loc in
+              { vb with pvb_expr }) 
+            (bindings) in
+        let cont = mapper.expr mapper (Option.get_exn cont) in
+        Exp.let_ ~loc Nonrecursive bindings cont
       | _ -> 
         default_mapper.expr mapper expr ; }
 

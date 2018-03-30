@@ -65,9 +65,9 @@ let model =
         (app 
           (app 
             (tx Weak ( *. )) 
-            (tx Weak (pc ~init:1.0 ()))) 
+            (tx Weak (pc ~init:"1.0" ()))) 
           (var))) 
-      (tx Weak (pc ~init:0.0 ())))
+      (tx Weak (pc ~init:"0.0" ())))
 
 let model =
   let Ex (m, p) = model in

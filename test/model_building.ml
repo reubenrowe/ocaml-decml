@@ -26,7 +26,7 @@ let m =
 
 let m =
   let%pc a = 1 
-      and b = 0 in
+     and b = 0 in
   let open Overlay.Pervasives in
   abs 
     (app 
@@ -51,16 +51,28 @@ let m' =
   let open Overlay.Pervasives in
     abs
       (pair
-        ((app
-          (tx Weak m)
-          (var)),
+        ((app (tx Weak m) (var)),
         (app 
-          (app (tx Weak (+.))
-            (app
-              (tx Weak m)
-              (var)))
+          (app (tx Weak (+.)) (app (tx Weak m) (var)))
           (tx Weak (Ex (Lifted 1.0, Parameters.null))))))
 
+let m' = 
+  let open Overlay.Pervasives in
+    abs
+      (pair
+        ((app (tx Weak m) (var)),
+        (app 
+          (app (tx Weak (+.)) (app (tx Weak m) (var)))
+          (tx Weak [%lift 1.0]))))
+          
+let m' = 
+  let%lift c = 1.0 in
+  let open Overlay.Pervasives in
+    abs
+      (pair
+        ((app (tx Weak m) (var)),
+        (app (app (tx Weak (+.)) (app (tx Weak m) (var))) (tx Weak c))))
+          
 (* The following is statically disallowed - we decouple the two models from
    their parameter vectors, and then try to rebind each one with the other's
    parameter vector. *)
