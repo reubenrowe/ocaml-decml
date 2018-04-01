@@ -23,11 +23,14 @@ let transform tx e =
   Exp.apply (mk_ident Model.tx) [ (Nolabel, tx); (Nolabel, e)]
   
 let weaken n ({ pexp_loc } as e) =
+  let pexp_loc = 
+    if n = 0 then pexp_loc else { pexp_loc with loc_ghost = true } in
   let txs = List.replicate n (Exp.construct (mknoloc Model._Weak) None) in
   let e = List.fold_right transform txs e in
   { e with pexp_loc }
 
 let var idx loc =
+  let loc = { loc with loc_ghost = true } in
   let txs = 
     List.replicate idx 
       (Exp.construct (mknoloc Model._Cong)
@@ -63,6 +66,7 @@ let decouple ({ pvb_pat } as pvb) e =
   { pvb with pvb_pat ; pvb_expr = e }
 
 let abs body pexp_loc =
+  let pexp_loc = { pexp_loc with loc_ghost = true } in
   let e = Exp.apply (mk_ident Model.abs) [Nolabel, body] in
   { e with pexp_loc }
 

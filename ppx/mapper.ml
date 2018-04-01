@@ -15,6 +15,7 @@ module Longident = struct
 end
 
 open Build
+open Attribute
 open Identifiers
 
 [@@@warning "-23"]
@@ -152,6 +153,9 @@ let dest_ext expr =
   | _ ->
     `NOEXT
 
+let max_depth es =
+  List.fold_left (fun d e -> max d (get e).depth) 0 es
+
 let model_rewriter _ _ =
   let rec rewriter scope =
     let ident { txt } ({ pexp_loc } as e) =
@@ -165,18 +169,16 @@ let model_rewriter _ _ =
         (* The identifier is a variable bound in the model. *)
         let e = var idx pexp_loc in
         Attribute.(add { default with depth = idx + 1} e)
-    and apply e args max_ctxt pexp_loc =
-      let Attribute.{ depth } = Attribute.get e in
-      let e = weaken (max_ctxt - depth) (Attribute.remove e) in
+    and apply e args depth pexp_loc =
+      let pexp_loc = { pexp_loc with loc_ghost = true } in
+      let e = weaken (depth - (get e).depth) (remove e) in
       let args =
         List.map
-          (fun (lbl, e) ->
-            let Attribute.{ depth } = Attribute.get e in
-            lbl, weaken (max_ctxt - depth) (Attribute.remove e))
+          (fun (lbl, e) -> lbl, weaken (depth - (get e).depth) (remove e))
           (args) in
       let app = List.fold_left (fun e (lbl, e') -> apply ~lbl e e') e args in
       let app = { app with pexp_loc } in
-      Attribute.(add { default with depth = max_ctxt } app)
+      add { default with depth } app
     in
     { Err.mapper with 
         expr = fun self ->
@@ -184,7 +186,7 @@ let model_rewriter _ _ =
           | { pexp_desc = Pexp_ident id } as e ->
             ident id e
           | { pexp_desc = Pexp_constant _; pexp_loc } as e ->
-            lift e pexp_loc
+            add default (lift e pexp_loc)
           | { pexp_desc = Pexp_let _ } ->
             failwith "Not implemented!"
           | { pexp_desc = Pexp_fun (lbl, default, pat, body); pexp_loc } ->
@@ -192,11 +194,10 @@ let model_rewriter _ _ =
             | Nolabel, None, { ppat_desc = Ppat_var { txt }} ->
               let self = rewriter ((Longident.Lident txt) :: scope) in
               let body = self.expr self body in
-              let Attribute.{ depth } = Attribute.get body in
-              let body = Attribute.remove body in
+              let { depth }, body = get body, remove body in
               let e = abs body pexp_loc in
               let depth = depth - 1 in
-              Attribute.(add { default with depth } e) 
+              add { default with depth } e
             | Nolabel, None, _ ->
               Location.raise_errorf ~loc:pexp_loc
                 "Expecting a singleton variable pattern!"
@@ -206,17 +207,29 @@ let model_rewriter _ _ =
             end
           | { pexp_desc = Pexp_apply (e, args); pexp_loc } ->
             let e = self.expr self e in
-            let Attribute.{ depth } = Attribute.get e in
-            let max_ctxt, args = 
-              List.fold_map 
-                (fun max_ctxt (lbl, e) -> 
-                  let e = self.expr self e in
-                  let Attribute.{ depth } = Attribute.get e in
-                  (max max_ctxt depth), (lbl, e)) 
-                depth (args) in
-            apply e args max_ctxt pexp_loc
-          | { pexp_desc = Pexp_tuple _ } ->
-            failwith "Not implemented!"
+            let args = 
+              List.map (fun (lbl, e) -> lbl, self.expr self e) (args) in
+            let depth = max_depth (e::(List.map snd args)) in
+            apply e args depth pexp_loc
+          | { pexp_desc = Pexp_tuple es; pexp_loc } as e ->
+            begin match es with
+            | [ _; _ ] ->
+              let es = List.map (self.expr self) es in
+              let depth = max_depth es in
+              let es = 
+                List.map 
+                  (fun e -> weaken (depth - (get e).depth) (remove e))
+                  (es) in
+              let e =
+                Exp.apply ~loc:{ pexp_loc with loc_ghost = true }
+                  (mk_ident Model.pair)
+                  [ (Nolabel, { e with pexp_desc = Pexp_tuple es }) ] in
+              add { default with depth } e
+            | _ ->
+              (* Compiler enforces invariant that [es] >= 2 *)
+              Location.raise_errorf ~loc:pexp_loc
+                "Only 2-tuples supported!"
+            end
           | { pexp_desc = Pexp_construct _ } ->
             failwith "Not implemented!"
           | { pexp_desc = Pexp_ifthenelse _ } ->

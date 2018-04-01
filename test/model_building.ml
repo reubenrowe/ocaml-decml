@@ -132,6 +132,10 @@ let m' =
         (app 
           (app (tx Weak (+.)) (app (tx Weak m) (var)))
           (tx Weak [%pc 1]))))
+
+let m' =
+  let%pc a = 1 in
+  [%model fun x -> (m x, m x +. a)]
           
 let f, g =
   let Ex (m, p) = m in
@@ -187,6 +191,11 @@ let m =
   let%model m x = x in
   let%model n y = y in
   abs (pair ((app (tx Weak m) var), (app (tx Weak n) var)))
+
+let m = 
+  let%model m x = x in
+  let%model n y = y in
+  [%model fun x -> (m x, n x)]
 
 ;;
 
