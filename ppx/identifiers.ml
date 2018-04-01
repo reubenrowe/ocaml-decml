@@ -24,7 +24,7 @@ let is_lift_ext s =
 let is_decouple_ext s =
   String.equal ext_decouple s
 
-let mk_ident lid = Exp.ident (Location.mknoloc lid)
+let mk_ident ?loc lid = Exp.ident ?loc (Location.mknoloc lid)
 
 (* OCaml Native Identifiers *)
 let unit = Lident "()"
@@ -35,20 +35,14 @@ let lib_name = Lident "Decml"
 
 module Model = struct
   let _module_name = Ldot (lib_name, "Model")
+  let _Weak = Ldot (_module_name, "Weak")
+  let _Exch = Ldot (_module_name, "Exch")
+  let _Cong = Ldot (_module_name, "Cong")
   let _Lifted = Ldot (_module_name, "Lifted")
   let _Ex = Ldot (_module_name, "Ex")
   module Parameters = struct
     let _module_name = Ldot (_module_name, "Parameters")
     let null = Ldot (_module_name, "null")
-  end
-  module Overlay = struct
-    let _module_name = Ldot (_module_name, "Overlay")
-    module Pervasives = struct
-      let _module_name = Ldot (_module_name, "Pervasives")
-    end
-    module List = struct
-      let _module_name = Ldot (_module_name, "List")
-    end
   end
   let pc       = Ldot (_module_name, "pc")
   let var      = Ldot (_module_name, "var")
@@ -64,3 +58,12 @@ module Model = struct
   let abs_rec  = Ldot (_module_name, "abs_rec")
 end
 
+module Overlay = struct
+  let _module_name = Ldot (lib_name, "Overlay")
+  module Pervasives = struct
+    let _module_name = Ldot (_module_name, "Pervasives")
+  end
+  module List = struct
+    let _module_name = Ldot (_module_name, "List")
+  end
+end

@@ -6,11 +6,19 @@ open     Ast_helper
 open     Ast_mapper
 open     Asttypes
 open     Location
-open     Longident
 open     Parsetree
+
+module Longident = struct
+  include Longident
+  let equal lid lid' = 
+    List.equal String.equal (flatten lid) (flatten lid')
+end
 
 open Build
 open Identifiers
+
+[@@@warning "-23"]
+(* Disable warning: all the fields are explicitly used in this record. *)
 
 let args = []
 let reset_args () = ()
@@ -144,17 +152,87 @@ let dest_ext expr =
   | _ ->
     `NOEXT
 
-module Scope = Map.Make(String)
-
 let model_rewriter _ _ =
   let rec rewriter scope =
-    Err.mapper in
-  rewriter Scope.empty
+    let ident { txt } ({ pexp_loc } as e) =
+      let idx = Option.map fst (List.find_idx (Longident.equal txt) scope) in
+      match idx with
+      | None ->
+        (* If it is not in the scope, it is a free variable and we assume it is
+           a model. *)
+        Attribute.(add { default with depth = 0 } e)
+      | Some idx ->
+        (* The identifier is a variable bound in the model. *)
+        let e = var idx pexp_loc in
+        Attribute.(add { default with depth = idx + 1} e)
+    and apply e args max_ctxt pexp_loc =
+      let Attribute.{ depth } = Attribute.get e in
+      let e = weaken (max_ctxt - depth) (Attribute.remove e) in
+      let args =
+        List.map
+          (fun (lbl, e) ->
+            let Attribute.{ depth } = Attribute.get e in
+            lbl, weaken (max_ctxt - depth) (Attribute.remove e))
+          (args) in
+      let app = List.fold_left (fun e (lbl, e') -> apply ~lbl e e') e args in
+      let app = { app with pexp_loc } in
+      Attribute.(add { default with depth = max_ctxt } app)
+    in
+    { Err.mapper with 
+        expr = fun self ->
+          function
+          | { pexp_desc = Pexp_ident id } as e ->
+            ident id e
+          | { pexp_desc = Pexp_constant _; pexp_loc } as e ->
+            lift e pexp_loc
+          | { pexp_desc = Pexp_let _ } ->
+            failwith "Not implemented!"
+          | { pexp_desc = Pexp_fun (lbl, default, pat, body); pexp_loc } ->
+            begin match lbl, default, pat with
+            | Nolabel, None, { ppat_desc = Ppat_var { txt }} ->
+              let self = rewriter ((Longident.Lident txt) :: scope) in
+              let body = self.expr self body in
+              let Attribute.{ depth } = Attribute.get body in
+              let body = Attribute.remove body in
+              let e = abs body pexp_loc in
+              let depth = depth - 1 in
+              Attribute.(add { default with depth } e) 
+            | Nolabel, None, _ ->
+              Location.raise_errorf ~loc:pexp_loc
+                "Expecting a singleton variable pattern!"
+            | _ ->
+              Location.raise_errorf ~loc:pexp_loc
+                "Labelled arguments not supported in models!"
+            end
+          | { pexp_desc = Pexp_apply (e, args); pexp_loc } ->
+            let e = self.expr self e in
+            let Attribute.{ depth } = Attribute.get e in
+            let max_ctxt, args = 
+              List.fold_map 
+                (fun max_ctxt (lbl, e) -> 
+                  let e = self.expr self e in
+                  let Attribute.{ depth } = Attribute.get e in
+                  (max max_ctxt depth), (lbl, e)) 
+                depth (args) in
+            apply e args max_ctxt pexp_loc
+          | { pexp_desc = Pexp_tuple _ } ->
+            failwith "Not implemented!"
+          | { pexp_desc = Pexp_construct _ } ->
+            failwith "Not implemented!"
+          | { pexp_desc = Pexp_ifthenelse _ } ->
+            failwith "Not implemented!"
+          | { pexp_desc = Pexp_extension _ } ->
+            failwith "Not implemented!"
+          | { pexp_loc } ->
+            Err.unsupported_model pexp_loc
+          ;
+     } in
+  rewriter []
 
 let rewriter config cookies =
   let model_mapper = model_rewriter config cookies in
   { default_mapper with
-    expr = fun mapper ({ pexp_loc = loc } as expr) ->
+    expr = fun self ({ pexp_loc = loc } as expr) ->
       match dest_ext expr with
 
       | `PC (None, Some _) ->
@@ -173,7 +251,7 @@ let rewriter config cookies =
               let vb = Option.get_exn vb in
               { vb with pvb_expr = prov_const ~init loc }) 
             (bindings) in
-        let cont = mapper.expr mapper (Option.get_exn cont) in
+        let cont = self.expr self (Option.get_exn cont) in
         Exp.let_ ~loc Nonrecursive bindings cont
 
       | `LIFT ([(None, (Some e, loc))], None) ->
@@ -187,36 +265,42 @@ let rewriter config cookies =
               let pvb_expr = lift pvb_expr loc in
               { vb with pvb_expr }) 
             (bindings) in
-        let cont = mapper.expr mapper (Option.get_exn cont) in
+        let cont = self.expr self (Option.get_exn cont) in
         Exp.let_ ~loc Nonrecursive bindings cont
 
       | `DECOUPLE (bindings, cont) ->
         let bindings =
           List.map
             (fun ({ pvb_expr } as pvb) ->
-              let model = mapper.expr mapper pvb_expr in
+              let model = self.expr self pvb_expr in
               decouple pvb model)
             (bindings) in
-        let cont = mapper.expr mapper cont in
+        let cont = self.expr self cont in
         Exp.let_ ~loc Nonrecursive bindings cont
 
       | `MODEL ([None, Some e], None) ->
-        model_mapper.expr model_mapper e
+        let model = 
+          Attribute.remove (model_mapper.expr model_mapper e) in
+        Exp.open_ Override (mknoloc Overlay.Pervasives._module_name) model
 
       | `MODEL (bindings, cont) ->
         let bindings =
           List.map
             (function
               | (Some ({ pvb_expr } as vb), None) ->
-                let pvb_expr = model_mapper.expr model_mapper pvb_expr in
+                let pvb_expr = 
+                  Attribute.remove (model_mapper.expr model_mapper pvb_expr) in
+                let pvb_expr = 
+                  Exp.open_ Override (mknoloc Overlay.Pervasives._module_name) 
+                    pvb_expr in
                 { vb with pvb_expr }
               | _ -> assert false) 
           (bindings) in
-        let cont = mapper.expr mapper (Option.get_exn cont) in
+        let cont = self.expr self (Option.get_exn cont) in
         Exp.let_ ~loc Nonrecursive bindings cont
         
       | `NOEXT -> 
-        default_mapper.expr mapper expr ; }
+        default_mapper.expr self expr ; }
 
 let () =
   Driver.register ~name:"decml" ~reset_args ~args

@@ -1,6 +1,7 @@
 open Decml
 open   Model
 
+module M : sig end = struct
 (* model m x = 1.0[@pc] * x + 0.0[@pc] *)
 let m =
   let open Overlay.Pervasives in
@@ -21,7 +22,7 @@ let m =
     (app 
       (app 
         (tx Weak (+.)) 
-        (app (app (tx Weak ( *. )) (tx Weak [%pc 1])) (var))) 
+        (app (app (tx Weak ( *. )) (tx Weak [%pc 1])) (var)))
       (tx Weak [%pc 0]))
 
 let m =
@@ -45,7 +46,12 @@ let m =
         (tx Weak (+.)) 
         (app (app (tx Weak ( *. )) (tx Weak a)) (var))) 
       (tx Weak b))
-            
+
+let m =
+  let%pc a = 1 in
+  let%pc b = 0 in
+  [%model fun x -> a *. x +. b]
+      
 (* model m' x = (m x, m x + 1.0) *)
 let m' = 
   let open Overlay.Pervasives in
@@ -172,12 +178,6 @@ let f, g =
 *)
 
 let m = 
-  let%model rec
-      m x = x
-  and n y = y in
-  abs (pair ((app (tx Weak m) var), (app (tx Weak n) var)))
-
-let m = 
   let%model
       m x = x
   and n y = y in
@@ -199,3 +199,5 @@ let x, y = g 2.0 in
 print_endline
   (Format.sprintf "%f, %f" x y)
 ;;
+
+end

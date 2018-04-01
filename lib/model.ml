@@ -207,29 +207,3 @@ let abs_rec (type a b c) (m : ((a * ((a -> b) * c)), b) t) =
   | Ex (Boxed (M m), ps) ->
     let m input = fixpoint (m input) in
     Ex (Boxed (M m), ps)
-
-
-(* Only use this internally to lift values whose type contains polymorphic type
-   parameters only in positive position; otherwise they cannot be generalised. *)
-let lift v = Ex (Boxed (M (fun (_, ()) -> v)), Parameters.P Map.empty)
-
-module Overlay = struct
-  module Pervasives = struct
-    let ( +  ) = lift ( +  )
-    let ( -  ) = lift ( -  )
-    let ( *  ) = lift ( *  )
-    let ( /  ) = lift ( /  )
-    let ( +. ) = lift ( +. )
-    let ( -. ) = lift ( -. )
-    let ( *. ) = lift ( *. )
-    let ( /. ) = lift ( /. )
-    let fst = Ex (Boxed (M (fun (_, ()) -> fst)), Parameters.P Map.empty)
-    let snd = Ex (Boxed (M (fun (_, ()) -> snd)), Parameters.P Map.empty)
-  end
-
-  module List = struct
-    open List
-    let empty = lift []
-    let map = Ex (Boxed (M (fun (_, ()) -> map)), Parameters.P Map.empty)
-  end
-end

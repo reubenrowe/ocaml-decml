@@ -150,30 +150,3 @@ val ifelse : ('a, bool) t * ('a, 'b) t * ('a, 'b) t -> ('a, 'b) t
 val abs_rec : (('a * (('a -> 'b) * 'c)), 'b) t -> ('c, 'a -> 'b) t
 (** Abstraction of a recursive function, where the argument is the top variable
     in the context, and the recursive instance variable is the second one. *)
-
-(** {1 Standard Library Overlay} *)
-
-(** A module containing lifted versions of values from the OCaml standard 
-    library. This can be opened to provide an overlay. *)
-module Overlay : sig
-
-  module Pervasives : sig
-    val ( +  ) : (unit, int -> int -> int) t
-    val ( -  ) : (unit, int -> int -> int) t
-    val ( *  ) : (unit, int -> int -> int) t
-    val ( /  ) : (unit, int -> int -> int) t
-    val ( +. ) : (unit, float -> float -> float) t
-    val ( -. ) : (unit, float -> float -> float) t
-    val ( *. ) : (unit, float -> float -> float) t
-    val ( /. ) : (unit, float -> float -> float) t
-    val fst : (unit, 'a * 'b -> 'a) t
-    val snd : (unit, 'a * 'b -> 'b) t
-  end
-
-  (** A module containing lifted versions of values operating on lists *)
-  module List : sig
-    val empty : (unit, 'a list) t
-    val map : (unit, ('a -> 'b) -> 'a list -> 'b list) t
-  end
-
-end

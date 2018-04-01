@@ -1,3 +1,5 @@
+open Containers
+
 open Migrate_parsetree
 open   Ast_404
 open     Ast_helper
@@ -13,6 +15,27 @@ open Identifiers
 let unit =
   Exp.construct (mknoloc unit) None
 
+(* TODO: Make sure that locations are set properly (also with the ghost flag 
+         set) so that PPX reports errors matched with the relevant places in the
+         source code. *)
+
+let transform tx e =
+  Exp.apply (mk_ident Model.tx) [ (Nolabel, tx); (Nolabel, e)]
+  
+let weaken n ({ pexp_loc } as e) =
+  let txs = List.replicate n (Exp.construct (mknoloc Model._Weak) None) in
+  let e = List.fold_right transform txs e in
+  { e with pexp_loc }
+
+let var idx loc =
+  let txs = 
+    List.replicate idx 
+      (Exp.construct (mknoloc Model._Cong)
+        (Some (Exp.construct (mknoloc Model._Weak) None))) in
+  let var = mk_ident Model.var in
+  let e = List.fold_right transform txs var in
+  { e with pexp_loc = loc }
+  
 let prov_const ?init loc =
   let loc = { loc with loc_ghost = true } in
   let args = [ (Nolabel, unit) ] in
@@ -38,3 +61,11 @@ let decouple ({ pvb_pat } as pvb) e =
   let { ppat_loc = loc } = pvb_pat in
   let pvb_pat = Pat.construct ~loc (mknoloc Model._Ex) (Some pvb_pat) in
   { pvb with pvb_pat ; pvb_expr = e }
+
+let abs body pexp_loc =
+  let e = Exp.apply (mk_ident Model.abs) [Nolabel, body] in
+  { e with pexp_loc }
+
+let apply ?(lbl=Nolabel) e e' =
+  let app = mk_ident Model.app in
+  Exp.apply app [(Nolabel, e); (lbl, e')]
