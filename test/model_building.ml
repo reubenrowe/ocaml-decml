@@ -197,6 +197,18 @@ let m =
   let%model n y = y in
   [%model fun x -> (m x, n x)]
 
+let m = [%model fun x y -> x ]
+let m = [%model fun x y -> y x ]
+
+let m = [%model 
+  fun x -> 
+    let c1 = 1
+    and c2 = 2 
+    and c3 = 3 in
+    ((x c1, x c2), c3)]
+
+let m = [%model let rec m x = m (x + 1) in m ]
+
 ;;
 
 let x = f 2.0 in

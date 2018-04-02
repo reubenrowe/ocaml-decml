@@ -16,7 +16,7 @@ let const_exp loc =
 let decouple loc =
   Location.raise_errorf ~loc "Expecting a variable pair pattern!"
 let rec_model loc =
-  Location.raise_errorf ~loc "Recursive let not supported for models!"
+  Location.raise_errorf ~loc "Mutual recursion not supported for models!"
 
 let unsupported_model loc = 
   Location.raise_errorf ~loc "Not supported in models!"

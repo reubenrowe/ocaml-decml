@@ -22,22 +22,24 @@ let unit =
 let transform tx e =
   Exp.apply (mk_ident Model.tx) [ (Nolabel, tx); (Nolabel, e)]
   
-let weaken n ({ pexp_loc } as e) =
-  let pexp_loc = 
-    if n = 0 then pexp_loc else { pexp_loc with loc_ghost = true } in
+let weaken n e pexp_loc =
+  let pexp_loc = { pexp_loc with loc_ghost = true } in
   let txs = List.replicate n (Exp.construct (mknoloc Model._Weak) None) in
   let e = List.fold_right transform txs e in
   { e with pexp_loc }
 
-let var idx loc =
-  let loc = { loc with loc_ghost = true } in
+let var idx scope_depth pexp_loc =
+  assert (idx < scope_depth) ;
+  let pexp_loc = { pexp_loc with loc_ghost = true } in
   let txs = 
-    List.replicate idx 
+    List.replicate (scope_depth - (idx + 1)) 
       (Exp.construct (mknoloc Model._Cong)
         (Some (Exp.construct (mknoloc Model._Weak) None))) in
   let var = mk_ident Model.var in
   let e = List.fold_right transform txs var in
-  { e with pexp_loc = loc }
+  let txs = List.replicate idx (Exp.construct (mknoloc Model._Weak) None) in
+  let e = List.fold_right transform txs e in
+  { e with pexp_loc }
   
 let prov_const ?init loc =
   let loc = { loc with loc_ghost = true } in
@@ -50,15 +52,17 @@ let prov_const ?init loc =
       (Labelled ("init"), Exp.constant (Const.string c)) :: args in
   Exp.apply ~loc (mk_ident Model.pc) args
 
-let lift e loc =
+let lift e scope_depth loc =
   let loc = { loc with loc_ghost = true } in
-  Exp.construct ~loc
-    (mknoloc Model._Ex)
-    (Some 
-      (Exp.tuple [
-          Exp.construct (mknoloc Model._Lifted) (Some e) ;
-          mk_ident Model.Parameters.null ;
-        ]))
+  let e =
+    Exp.construct
+      (mknoloc Model._Ex)
+      (Some 
+        (Exp.tuple [
+            Exp.construct (mknoloc Model._Lifted) (Some e) ;
+            mk_ident Model.Parameters.null ;
+          ])) in
+  weaken scope_depth e loc
 
 let decouple ({ pvb_pat } as pvb) e =
   let { ppat_loc = loc } = pvb_pat in
@@ -73,3 +77,20 @@ let abs body pexp_loc =
 let apply ?(lbl=Nolabel) e e' =
   let app = mk_ident Model.app in
   Exp.apply app [(Nolabel, e); (lbl, e')]
+
+let let_bind bindings cont pexp_loc =
+  let pexp_loc = { pexp_loc with loc_ghost = true } in
+  let let_bind e cont =
+    Exp.apply (mk_ident Model.let_bind) [ (Nolabel, e) ; (Nolabel, cont) ] in
+  let e = List.fold_right let_bind bindings cont in
+  { e with pexp_loc }
+
+let pair e es loc =
+  match es with
+  | [ _; _ ] ->
+    let loc = { loc with loc_ghost = true } in
+    Exp.apply ~loc
+      (mk_ident Model.pair)
+      [ (Nolabel, { e with pexp_desc = Pexp_tuple es }) ]
+  | _ ->
+    invalid_arg (Format.sprintf "%s.pair" __MODULE__)
