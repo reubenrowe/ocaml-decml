@@ -264,6 +264,12 @@ let rec rewriter config cookies scope =
     let es = List.map (self.expr self) es in
     pair e es pexp_loc
 
+  and ifthenelse self (_test, _then, _else) pexp_loc =
+    let _test = self.expr self _test in
+    let _then = self.expr self _then in
+    let _else = self.expr self _else in
+    ifthenelse (_test, _then, _else) pexp_loc
+    
   in
   { Err.mapper with 
       expr = fun self ->
@@ -308,10 +314,13 @@ let rec rewriter config cookies scope =
             Location.raise_errorf ~loc:pexp_loc
               "Only 2-tuples supported!"
           end
-        | { pexp_desc = Pexp_construct _ } ->
-          failwith "Not implemented!"
-        | { pexp_desc = Pexp_ifthenelse _ } ->
-          failwith "Not implemented!"
+        | { pexp_desc = Pexp_construct _; pexp_loc } ->
+          Location.raise_errorf ~loc:pexp_loc "Not implemented!"
+        | { pexp_desc = Pexp_ifthenelse (_test, _then, Some _else); 
+            pexp_loc } ->
+          ifthenelse self (_test, _then, _else) pexp_loc
+        | { pexp_desc = Pexp_ifthenelse (_, _, None); pexp_loc } ->
+          Err.ifthenelse pexp_loc
         | { pexp_desc = Pexp_extension ext ; pexp_loc } as expr ->
           begin match dest_ext ext pexp_loc with
           | `PC (None, Some _) ->

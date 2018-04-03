@@ -110,3 +110,9 @@ let pair e es loc =
       [ (Nolabel, { e with pexp_desc = Pexp_tuple es }) ]
   | _ ->
     invalid_arg (Format.sprintf "%s.pair" __MODULE__)
+
+let ifthenelse (_test, _then, _else) loc =
+  let loc = { loc with loc_ghost = true } in
+  Exp.apply ~loc
+    (mk_ident Model.ifelse)
+    [ (Nolabel, _test) ; (Nolabel, _then) ; (Nolabel, _else) ;]

@@ -21,6 +21,8 @@ let rec_model loc =
   Location.raise_errorf ~loc "Mutual recursion not supported for models!"
 let continuation loc =
   Location.raise_errorf ~loc "Expecting a continuation expression!"
+let ifthenelse loc = 
+  Location.raise_errorf ~loc "Expecting an else branch!"
 
 let unsupported_model loc = 
   Location.raise_errorf ~loc "Not supported in models!"
