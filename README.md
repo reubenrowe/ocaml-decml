@@ -21,12 +21,11 @@ open   Optimise
 let%model linear x = ([%pc 1] *. x) +. [%pc 0]
 
 let model =
-  let%decouple (m, p) = linear in
-  let model = rebind m in
-  let p =
+  let%decouple (model, params) = linear in
+  let params =
     grad_desc ~loss_f:mse ~rate:0.00001 ~threshold:1.0 ~epochs:50000 ~model
-      p data in
-  model p
+      params data in
+  rebind model params
 ```
 
 `DecML` makes building supervised learning models simple because it handles

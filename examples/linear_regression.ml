@@ -17,12 +17,11 @@ let data =
         x, y))
 
 let model =
-  let%decouple (m, p) = linear in
-  let m = rebind m in
-  let p = 
+  let%decouple (model, params) = linear in
+  let params = 
     grad_desc ~loss_f:mse ~rate:!rate ~threshold:!threshold ~epochs:!iterations 
-      ~model:m p data in
-  m p
+      ~model params data in
+  rebind model params
 
 let () =
   output model Float.pp !start_x

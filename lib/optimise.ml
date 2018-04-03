@@ -82,4 +82,5 @@ let grad_desc ~loss_f ~rate ~threshold ~epochs ~model params data =
   grad_desc 0 params
 
 let grad_desc ~loss_f ~rate ~threshold ~epochs ~model params data =
+  let model = rebind model in
   grad_desc ~loss_f ~rate ~threshold ~epochs ~model params data

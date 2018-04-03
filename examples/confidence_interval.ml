@@ -20,13 +20,12 @@ let data =
         x, y))
 
 let model =
-  let%decouple (m, p) = ci in
-  let m = rebind m in
-  let p = 
+  let%decouple (model, params) = ci in
+  let params = 
     grad_desc ~loss_f:confidence_interval 
-      ~rate:!rate ~threshold:!threshold ~epochs:!iterations 
-      ~model:m p data in
-  m p
+      ~rate:!rate ~threshold:!threshold ~epochs:!iterations ~model 
+      params data in
+  rebind model params
 
 let () =
   output model (Pair.pp ~sep:" " Float.pp Float.pp) !start_x
