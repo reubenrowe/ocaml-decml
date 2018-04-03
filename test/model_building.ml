@@ -51,6 +51,28 @@ let m =
   let%pc a = 1 in
   let%pc b = 0 in
   [%model fun x -> a *. x +. b]
+
+let m = 
+  [%model 
+    fun x ->
+      let%pc a = 1
+      and    b = 0 in
+      a *. x +. b ]
+
+let m = [%model fun x -> [%pc 1] *. x +. [%pc 0]]
+
+let%model m x =
+  let%pc a = 1 in
+  let%pc b = 0 in
+  a *. x +. b
+
+let%pc a = 1
+let%pc b = 0
+let%model m x = a *. x +. b
+
+let%lift one = 1
+
+let%model m x = [%pc 1] *. x +. [%pc 0]
       
 (* model m' x = (m x, m x + 1.0) *)
 let m' = 
@@ -78,7 +100,18 @@ let m' =
       (pair
         ((app (tx Weak m) (var)),
         (app (app (tx Weak (+.)) (app (tx Weak m) (var))) (tx Weak c))))
-          
+
+(* Nested let-bound extensions *)
+let%model m' x = 
+  let%lift c = 1.0 in
+  (m x, m x +. c)
+(* Nested inline extensions *)
+let%model m' x = 
+  (m x, m x +. [%lift 1.0])
+(* Automatic lifting of constants *)
+let%model m' x = 
+  (m x, m x +. 1.0)
+  
 (* The following is statically disallowed - we decouple the two models from
    their parameter vectors, and then try to rebind each one with the other's
    parameter vector. *)
@@ -181,6 +214,18 @@ let f, g =
   rebind m p, rebind m' p' 
 *)
 
+;;
+
+let%decouple (m, p) = m in
+rebind m p 
+
+;;
+
+let%decouple (m', p') = m' in
+rebind m' p' 
+
+;;
+
 let m = 
   let%model
       m x = x
@@ -197,6 +242,16 @@ let m =
   let%model n y = y in
   [%model fun x -> (m x, n x)]
 
+let%model m = 
+  let%model m x = x in
+  let%model n y = y in
+  fun x -> (m x, n x)
+  
+let%model m = 
+  let m x = x in
+  let n y = y in
+  fun x -> (m x, n x)
+  
 let m = [%model fun x y -> x ]
 let m = [%model fun x y -> y x ]
 
@@ -208,6 +263,7 @@ let m = [%model
     ((x c1, x c2), c3)]
 
 let m = [%model let rec m x = m (x + 1) in m ]
+let%model rec m x = m (x + 1)
 
 ;;
 

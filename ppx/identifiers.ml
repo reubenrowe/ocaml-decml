@@ -48,6 +48,7 @@ module Model = struct
   let var      = Ldot (_module_name, "var")
   let app      = Ldot (_module_name, "app")
   let abs      = Ldot (_module_name, "abs")
+  let abs_rec  = Ldot (_module_name, "abs_rec")
   let let_bind = Ldot (_module_name, "let_bind")
   let tx       = Ldot (_module_name, "tx")
   let pair     = Ldot (_module_name, "pair")

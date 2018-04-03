@@ -78,11 +78,27 @@ let apply ?(lbl=Nolabel) e e' =
   let app = mk_ident Model.app in
   Exp.apply app [(Nolabel, e); (lbl, e')]
 
+let abs_rec scope_depth body pexp_loc =
+  let pexp_loc = { pexp_loc with loc_ghost = true } in
+  let body = 
+    apply 
+      (weaken 1 body Location.none)
+      (var scope_depth (scope_depth + 2) Location.none) in
+  let e = Exp.apply (mk_ident Model.abs_rec) [Nolabel, body] in
+  { e with pexp_loc }
+
 let let_bind bindings cont pexp_loc =
   let pexp_loc = { pexp_loc with loc_ghost = true } in
   let let_bind e cont =
     Exp.apply (mk_ident Model.let_bind) [ (Nolabel, e) ; (Nolabel, cont) ] in
   let e = List.fold_right let_bind bindings cont in
+  { e with pexp_loc }
+
+let letrec_bind scope_depth f cont pexp_loc =
+  let pexp_loc = { pexp_loc with loc_ghost = true } in
+  let f = abs_rec scope_depth f Location.none in
+  let e = 
+    Exp.apply (mk_ident Model.let_bind) [(Nolabel, f) ; (Nolabel, cont)] in
   { e with pexp_loc }
 
 let pair e es loc =

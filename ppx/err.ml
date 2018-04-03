@@ -15,8 +15,12 @@ let const_exp loc =
   Location.raise_errorf ~loc "Expecting a single constant expression!"
 let decouple loc =
   Location.raise_errorf ~loc "Expecting a variable pair pattern!"
+let nested_decouple loc =
+  Location.raise_errorf ~loc "Decoupling not supported within models!"
 let rec_model loc =
   Location.raise_errorf ~loc "Mutual recursion not supported for models!"
+let continuation loc =
+  Location.raise_errorf ~loc "Expecting a continuation expression!"
 
 let unsupported_model loc = 
   Location.raise_errorf ~loc "Not supported in models!"
