@@ -3,7 +3,8 @@
 (executable
   ((name model_building)
    (libraries (decml))
-   (preprocess (pps (decml.ppx)))))
+   (preprocess (pps (decml.ppx)))
+  ))
 
 (alias 
   ((name test-model_building)

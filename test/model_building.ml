@@ -1,125 +1,136 @@
 open Decml
 open   Model
 
-module M : sig end = struct
-(* model m x = 1.0[@pc] * x + 0.0[@pc] *)
-let m =
-  let open Overlay.Pervasives in
-  abs 
-    (app 
-      (app 
-        (tx Weak (+.)) 
-        (app 
-          (app 
-            (tx Weak ( *. )) 
-            (tx Weak (pc ~init:"1.0" ()))) 
-          (var))) 
-      (tx Weak (pc ~init:"0.0" ())))
+(* We can define models using a [%model ... ] extension, within which we can
+   nest [%pc ... ] extensions to specify model parameters. The parameters take
+   the initial value specified in the [%pc ... ] extension. *)
 
-let m =
-  let open Overlay.Pervasives in
-  abs 
-    (app 
-      (app 
-        (tx Weak (+.)) 
-        (app (app (tx Weak ( *. )) (tx Weak [%pc 1])) (var)))
-      (tx Weak [%pc 0]))
+(* The PPX automatically opens the Decml.Overlay.Pervasives module which
+   contains lifted versions of the infix operators found in the standard library
+   Pervasives module. This means that we can use the operators we expect without
+   having to lift them first. *)
+let m = [%model fun x -> ([%pc 1.0] *. x) +. [%pc 0.0] ]
 
-let m =
-  let%pc a = 1 
-     and b = 0 in
-  let open Overlay.Pervasives in
-  abs 
-    (app 
-      (app 
-        (tx Weak (+.)) 
-        (app (app (tx Weak ( *. )) (tx Weak a)) (var))) 
-      (tx Weak b))
-      
-let m =
-  let%pc a = 1 in
-  let%pc b = 0 in
-  let open Overlay.Pervasives in
-  abs 
-    (app 
-      (app 
-        (tx Weak (+.)) 
-        (app (app (tx Weak ( *. )) (tx Weak a)) (var))) 
-      (tx Weak b))
+(* In fact, we don't have to use floating point constants in the [%pc ... ]
+   extensions; if we use an integer constant, this will automatically be
+   converted to a floating point value.  *)
+let m = [%model fun x -> ([%pc 1] *. x) +. [%pc 0] ]
 
-let m =
-  let%pc a = 1 in
-  let%pc b = 0 in
-  [%model fun x -> a *. x +. b]
+(* Furthermore, if we don't specify any initial value, a default one will be 
+   used, namely 0.0. The default initial value can be set using the function
+   [Decml.Model.default_constant]. *)
+let m = [%model fun x -> ([%pc 1] *. x) +. [%pc] ]
 
-let m = 
-  [%model 
-    fun x ->
-      let%pc a = 1
-      and    b = 0 in
-      a *. x +. b ]
+(* We can use an inline extension syntax for models *)
+let%model m x = ([%pc 1] *. x) +. [%pc]
 
-let m = [%model fun x -> [%pc 1] *. x +. [%pc 0]]
+(* We can use let bindings within models, e.g. for provisional constants. *)
+let%model m x =
+  let a = [%pc 1] in
+  let b = [%pc] in
+  (a *. x) +. b
 
+(* We can also inline the provisional constant extensions, but then we have to
+   specify a initial value. *)
 let%model m x =
   let%pc a = 1 in
   let%pc b = 0 in
-  a *. x +. b
+  (a *. x) +. b
 
+(* We can lift arbitrary expressions using the [%lift ... ] extension. Note that
+   the expression is evaluated, and the resulting value lifted to be a model. *)
+let avg = 
+  let xs = [1;2;3;4] in 
+  [%lift (List.fold_left (+) 0 xs) / (List.length xs) ]
+(* Note that we should not place a let-binding within a [%lift ... ] extension
+   because the PPX will only lift the let-bound expression. *)
+(* However we can use let-bindings within inline %lift extensions. *)
+let%lift avg =
+  let xs = [1;2;3;4] in
+  (List.fold_left (+) 0 xs) / (List.length xs)
+
+(* The lift extension can be used inside models. *)
+let%model m x =
+  let c = [%lift 3.0] in
+  ([%pc 1] *. x) +. c
+
+let%model m x =
+  let%lift c = 3.0 in
+  ([%pc 1] *. x) +. c
+
+(* Any constant expression within a model definition will automatically be
+   lifted. *)
+let%model m x = ([%pc 1] *. x) +. 3.0
+
+(* Model extensions can be nested within one another. *)
+let%model m x =
+  let%model inner_m y = ([%pc 1] *. y) +. [%pc] in
+  inner_m x, inner_m x +. 1.0
+(* However, it isn't necessary to explicitly specify that nested expression 
+   are models - they are interpreted as such anyway! *)
+let%model m x =
+  let inner_m y = ([%pc 1] *. y) +. [%pc] in
+  inner_m x, inner_m x +. 1.0
+ 
+(* Models can refer to identifiers in scope at their point of definition, and
+   these will automatically be assumed to be bound to models. *)
 let%pc a = 1
 let%pc b = 0
-let%model m x = a *. x +. b
+let%model m x = (a *. x) +. b
 
-let%lift one = 1
-
-let%model m x = [%pc 1] *. x +. [%pc 0]
-      
-(* model m' x = (m x, m x + 1.0) *)
-let m' = 
-  let open Overlay.Pervasives in
-    abs
-      (pair
-        ((app (tx Weak m) (var)),
-        (app 
-          (app (tx Weak (+.)) (app (tx Weak m) (var)))
-          (tx Weak (Ex (Lifted 1.0, Parameters.null))))))
-
-let m' = 
-  let open Overlay.Pervasives in
-    abs
-      (pair
-        ((app (tx Weak m) (var)),
-        (app 
-          (app (tx Weak (+.)) (app (tx Weak m) (var)))
-          (tx Weak [%lift 1.0]))))
-          
-let m' = 
-  let%lift c = 1.0 in
-  let open Overlay.Pervasives in
-    abs
-      (pair
-        ((app (tx Weak m) (var)),
-        (app (app (tx Weak (+.)) (app (tx Weak m) (var))) (tx Weak c))))
-
-(* Nested let-bound extensions *)
+let%model m x = ([%pc 1] *. x) +. [%pc]
 let%model m' x = 
-  let%lift c = 1.0 in
-  (m x, m x +. c)
-(* Nested inline extensions *)
-let%model m' x = 
-  (m x, m x +. [%lift 1.0])
-(* Automatic lifting of constants *)
-let%model m' x = 
-  (m x, m x +. 1.0)
-  
-(* The following is statically disallowed - we decouple the two models from
+  m x, m x +. 1.0
+
+(* We can even define models recursively. *)
+let%model rec m x = m (x + 1)
+(* This is a silly example, of course, because this is a non-terminating 
+   function, but it serves to show that recursive definitions are possible for
+   models. *)
+
+(* We can decouple models using the %decouple inline extension. *)
+let optimised_model =
+  let%decouple 
+    (parameterised_model, params) = 
+      [%model fun x -> ([%pc 1] *. x) +. [%pc] ] in
+  (* Do some optimisation of the parameters here *)
+  (* We can then rebind the parameterised model to the optimised parameters to
+     obtain a vanilla OCaml function that implements the optimised model. *)
+  rebind parameterised_model params
+
+(* This last example might look neater if we let-bind the model definition. *)
+let optimised_model =
+  let%model m x = ([%pc 1] *. x) +. [%pc] in
+  let%decouple (parameterised_model, params) = m in
+  (* Optimise the parameters *)
+  rebind parameterised_model params
+
+(* We do not (yet) allow decoupling within model definitions. *)
+(* let%model m =
+  let m x = x *. [%pc 1] in
+  let%decouple (m, p) = m in
+  fun x -> x *)
+(* Error: Decoupling not supported within models! *)
+
+(* The abstraction of (parameterised) models in the DecML library uses 
+   GADTS and existentially quantified type variables to ensure that models can
+   only be rebound to parameters from which they have been decoupled (possibly
+   after some sequence of operations have been carried out on them). *)
+   
+(* When a model is decoupled from its parameters, we obtain a parameterised
+   model and a parameter vector, both of which have types containing the same
+   freshly created existentially quantified polymorphic type variable. *)
+
+(* Thus the following is statically disallowed - we decouple the two models from
    their parameter vectors, and then try to rebind each one with the other's
    parameter vector. *)
 
 (* 
 let m, m' =
-  let Ex (m, p) = m in
-  let Ex (m', p') = m' in
+  let%model m x = ([%pc 1] *. x) +. 2.0 in
+  let%model m' x = ([%pc 1] *. x) +. [%pc] in
+  let%decouple (m, p) = m in
+  let%decouple (m', p') = m' in
   let m = rebind m p' in
     (* This expression [p'] has type
          $Ex_'c1 Lib.Model.Parameters.t = $Ex_'c1 Lib__Model.Parameters.t
@@ -135,51 +146,41 @@ let m, m' =
   m, m'
 *)
 
-(* In this case, no runtime error would occur in doing this since the two models
-   use exactly the same keys to identify the parameters in the underlying 
-   implementation.
+(* If we were to allow this, a runtime error would occur since the underlying
+   implementations of the two models use different keys to identify the 
+   parameters. *)
 
-   However, in general this will not be the case and so we should not allow it.
-   For example, the following model is defined as m' above, but makes its
-   constant a parameter. Thus, if we were to be able to decouple this model and
-   then rebind it with the parameters of the model m defined above, there would
-   be a runtime error when the resulting function is applied since this would
-   try to look up a value for the new provisional constant within a parameter
-   vector that does not contain it. *)
+(* However, there is no such thing as a free lunch and the price we pay for 
+   these for these static, compile-time checks is that we cannot create fully
+   polymorphic models. This has to do with the fact that we create models by
+   applying combinator functions, and so OCaml's value restriction prevents the
+   polymorphic type variables that are inferred during type checking to be fully
+   generalised. *)
 
-(* model m' x = (m x, m x + 1.0[@pc]) *)
-let m' = 
-  let open Overlay.Pervasives in
-    abs
-      (pair
-        ((app (tx Weak m) (var)),
-        (app 
-          (app (tx Weak (+.)) (app (tx Weak m) (var)))
-          (tx Weak (pc ~init:"1.0" ())))))
+(* This is OK inasmuch as we can still use these functions internally within a
+   module as long as we do not export them to the top level. *)
 
-let m' = 
-  let open Overlay.Pervasives in
-    abs
-      (pair
-        ((app (tx Weak m) (var)),
-        (app 
-          (app (tx Weak (+.)) (app (tx Weak m) (var)))
-          (tx Weak [%pc 1]))))
+module M : sig 
+  val m : (unit, Carrier.t -> Carrier.t) Model.t
+  val m' : (unit, Carrier.t -> Carrier.t) Model.t
+end = struct
 
-let m' =
-  let%pc a = 1 in
-  [%model fun x -> (m x, m x +. a)]
-          
-let f, g =
-  let Ex (m, p) = m in
-  let Ex (m', p') = m' in
-  rebind m p, rebind m' p'
+  (* This model has type (unit, '_a -> '_b -> '_a) Decml.Model.t *)
+  let%model m x y = x
 
-let f, g =
-  let%decouple (m, p) = m in
-  let%decouple (m', p') = m' in
-  rebind m p, rebind m' p' 
-  
+  (* This model has type (unit, '_a -> ('_a -> '_b) -> '_b) Decml.Model.t *)
+  let%model m' x y = y x
+
+  (* We can use both of these in building other models that do not contain type
+     variables that cannot be generalised, e.g. models with ground types. *)
+  let%model m x = 
+    m (x *. [%pc]) 2.0
+  let%model m' x =
+    let m'' y = y *. 2.0 in
+    (m' [%pc 2] m'') +. x
+
+end
+
 (* Note that although we support the translation of multiple decoupling
     bindings of the form:
     
@@ -200,81 +201,3 @@ let f, g =
     
     We set the locations so merlin can associate the error with the
     sugared patterns. *)
-
-(* 
-let f, g =
-  let Ex (m, p) = m
-  and Ex (m', p') = m' in
-  rebind m p, rebind m' p'
-    
-let f, g =
-  let%decouple 
-      (m, p) = m
-  and (m', p') = m' in
-  rebind m p, rebind m' p' 
-*)
-
-;;
-
-let%decouple (m, p) = m in
-rebind m p 
-
-;;
-
-let%decouple (m', p') = m' in
-rebind m' p' 
-
-;;
-
-let m = 
-  let%model
-      m x = x
-  and n y = y in
-  abs (pair ((app (tx Weak m) var), (app (tx Weak n) var)))
-
-let m = 
-  let%model m x = x in
-  let%model n y = y in
-  abs (pair ((app (tx Weak m) var), (app (tx Weak n) var)))
-
-let m = 
-  let%model m x = x in
-  let%model n y = y in
-  [%model fun x -> (m x, n x)]
-
-let%model m = 
-  let%model m x = x in
-  let%model n y = y in
-  fun x -> (m x, n x)
-  
-let%model m = 
-  let m x = x in
-  let n y = y in
-  fun x -> (m x, n x)
-  
-let m = [%model fun x y -> x ]
-let m = [%model fun x y -> y x ]
-
-let m = [%model 
-  fun x -> 
-    let c1 = 1
-    and c2 = 2 
-    and c3 = 3 in
-    ((x c1, x c2), c3)]
-
-let m = [%model let rec m x = m (x + 1) in m ]
-let%model rec m x = m (x + 1)
-
-;;
-
-let x = f 2.0 in
-print_endline
-  (Format.sprintf "%f" x)
-;;
-
-let x, y = g 2.0 in
-print_endline
-  (Format.sprintf "%f, %f" x y)
-;;
-
-end

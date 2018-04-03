@@ -28,6 +28,9 @@ let model =
   rebind model params
 ```
 
+Some more examples of `DecML` syntax can be found in the 
+[EXAMPLES.md](EXAMPLES.md) file.
+
 `DecML` makes building supervised learning models simple because it handles
 model parameters automatically when combining models. Moreover, it uses OCaml's
 type system to ensure that parameterised models can only be rebound with the
