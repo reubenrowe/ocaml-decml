@@ -39,20 +39,33 @@ let cross_entropy f data =
     then sum
     else -. (sum /. (float_of_int (length data)))
   
-let rec grad_desc ~loss_f ~rate ~epochs ~model params data =
-  if epochs = 0 then
-    params
-  else
-    let x = random_choose data (Random.get_state ()) in
-    let dfs =  (* Partial derivatives for each basis of the vector space *)
-      let f ps = loss_f (model ps) [x] in
-      map 
-        (fun b -> 
-          let b = !dx <*.> b in
-          let df = 
-            ((f (params <+> b) -. f (params <+> (~<> b))) /. (2.0 *. !dx)) in
-          -.(rate *. df) <*.> b)
-        (bases params) in
-   let params = fold_left plus params dfs in
-   let epochs = epochs - 1 in
-   grad_desc ~loss_f ~rate ~epochs ~model params data
+let grad_desc ~loss_f ~rate ~threshold ~epochs ~model params data =
+  let rec grad_desc current_epoch params =
+    let loss = loss_f (model params) data in
+    if current_epoch >= epochs || Containers.Float.(loss <= threshold)  then
+      let () = 
+        Format.fprintf Format.err_formatter
+          "Completed optimisation after %i iterations with error %.5f@."
+          current_epoch loss in
+      params
+    else
+      (* let () = 
+        Format.fprintf Format.err_formatter 
+          "@[<h>Step %d. Current loss: %.10f. %a@]@." 
+          epochs (loss_f (model params) data) Parameters.pp params in *)
+      let dfs =  (* Partial derivatives at x for each basis of the vector space *)
+        let x = random_choose data (Random.get_state ()) in
+        let f ps = loss_f (model ps) [x] in
+        map 
+          (fun b -> 
+            let df = 
+              let b = !dx <*.> b in
+              ((f (params <+> b) -. f (params <-> b)) /. (2.0 *. !dx)) in
+            -.(rate *. df) <*.> b)
+          (bases params) in
+    let params = fold_left plus params dfs in
+    grad_desc (current_epoch + 1) params in
+  grad_desc 0 params
+
+let grad_desc ~loss_f ~rate ~threshold ~epochs ~model params data =
+  grad_desc ~loss_f ~rate ~threshold ~epochs ~model params data

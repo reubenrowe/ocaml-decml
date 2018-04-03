@@ -26,6 +26,9 @@ module Parameters = struct
   type 'a t = 
     P : Carrier.t Map.t -> 'a t
 
+  let pp fmt (P ps) =
+    (List.pp Carrier.pp) fmt (List.map snd (Map.bindings ps))
+
   let null = P Map.empty
 
   let merge (P p) (P p') =
@@ -42,6 +45,8 @@ module Parameters = struct
 
   let add x (P v) =
     P (Map.map ((+.) x) v)
+  let subtract x (P v) =
+    P (Map.map ((-.) x) v)
   let mult x (P v) =
     P (Map.map (( *. ) x) v)
   let refl v =
@@ -68,6 +73,8 @@ module Parameters = struct
       Lazy.force err
   let plus (P v) (P v') =
     P (combine (+.) v v')
+  let minus (P v) (P v') =
+    P (combine (-.) v v')
   let times (P v) (P v') =
     P (combine ( *. ) v v')
   let dot (P v) (P v') =
@@ -75,8 +82,10 @@ module Parameters = struct
     
   module Infix = struct
     let (<+.>) v v' = add v v'
+    let (<-.>) v v' = subtract v v'
     let (<*.>) v v' = mult v v'
     let (<+>) v v' = plus v v'
+    let (<->) v v' = minus v v'
     let (<*>) v v' = times v v'
     let (<.>) v v' = dot v v'
     let (~<>) v = refl v

@@ -18,6 +18,9 @@ module Parameters : sig
   (** [unit ps] returns the unit vector in the vector space in which [ps] 
       lives. *)
 
+  val pp : 'a t Containers.Format.printer
+  (** A formatter for printing parameter vectors. *)
+
   (** {0 Vector Space Operations} *)
 
   (** Module containing infix versions of the vector space operations. *)
@@ -28,12 +31,18 @@ module Parameters : sig
     val (<+.>) : Carrier.t -> 'a t -> 'a t
     (** Scalar addition to a parameter vector. *)
 
+    val (<-.>) : Carrier.t -> 'a t -> 'a t
+    (** Scalar addition to a parameter vector. *)
+
     val (<*.>) : Carrier.t -> 'a t -> 'a t
     (** Scalar multiplicat of a parameter vector. *)
 
     (** {0 Vector Operations} *)
 
     val (<+>) : 'a t -> 'a t -> 'a t
+    (** Pointwise addition of two parameter vectors. *)
+
+    val (<->) : 'a t -> 'a t -> 'a t
     (** Pointwise addition of two parameter vectors. *)
 
     val (<*>) : 'a t -> 'a t -> 'a t
@@ -52,6 +61,9 @@ module Parameters : sig
   val add : Carrier.t -> 'a t -> 'a t
   (** Scalar addition to a parameter vector. *)
 
+  val subtract : Carrier.t -> 'a t -> 'a t
+  (** Scalar subtraction from a parameter vector. *)
+
   val mult : Carrier.t -> 'a t -> 'a t
   (** Scalar multiplication of a parameter vector. *)
 
@@ -59,6 +71,9 @@ module Parameters : sig
 
   val plus : 'a t -> 'a t -> 'a t
   (** Pointwise addition of two parameter vectors. *)
+
+  val minus : 'a t -> 'a t -> 'a t
+  (** Pointwise subtraction of two parameter vectors. *)
 
   val times : 'a t -> 'a t -> 'a t
   (** Pointwise multiplication of two parameter vectors. *)
