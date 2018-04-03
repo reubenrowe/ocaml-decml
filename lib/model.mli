@@ -125,6 +125,9 @@ val lift : 'a -> (unit, 'a) t
 val lift_lazy : (unit -> 'a) -> (unit, 'a) t
  *)
 
+ val default_constant : Carrier.t -> unit
+ (** Sets the default initial value to be used for provisional constants. *)
+
 (** {1 Basic Abductive Calculus} *)
 
 val pc : ?init:string -> unit -> (unit, Carrier.t) t

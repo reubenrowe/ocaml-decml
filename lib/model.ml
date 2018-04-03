@@ -123,14 +123,22 @@ let rebind_open
   | Boxed M model -> fun ctxt -> model (params, ctxt)
   | Lifted f -> fun () -> f
 
+let default_constant = ref 0.0
+
 (* Combinators for building models *)
 
-let pc ?(init="0.0") () =
+let pc ?init () =
   let key = Key.get_fresh () in
   let model = fun (params, ()) -> Option.get_exn (Map.get key params) in
-  let init = Carrier.of_string init in
+  let init = 
+    match init with
+    | None      -> !default_constant
+    | Some init -> Carrier.of_string init in
   let params = Map.singleton key init in
   Ex (Boxed (M model), Parameters.P params)
+
+let default_constant v = 
+  default_constant := v
 
 let var = Ex (Boxed (M (fun (_, (x, ())) -> x)), Parameters.P Map.empty)
 
