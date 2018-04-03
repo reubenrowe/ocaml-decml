@@ -5,9 +5,11 @@ CLEAN := clean
 # Examples
 
 LINEAR_REGRESSION_EX := examples/linear_regression.exe
+CONFIDENCE_INTERVAL_EX := examples/confidence_interval.exe
 
 ALL_EXAMPLES := \
-	$(LINEAR_REGRESSION_EX)
+	$(LINEAR_REGRESSION_EX) \
+	$(CONFIDENCE_INTERVAL_EX)
 
 # Tests
 

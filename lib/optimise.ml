@@ -1,4 +1,5 @@
 open Containers.List
+open Containers.Fun
 
 open Model
 open   Parameters
@@ -38,6 +39,19 @@ let cross_entropy f data =
   if Containers.Float.equal sum 0.0
     then sum
     else -. (sum /. (float_of_int (length data)))
+
+let confidence_interval f data =
+  let ds = 
+    List.filter 
+      (fun (x, y) -> 
+        let z, z' = fst (f x), snd (f x) in
+        (z < y && z' < y) || (z > y && z' > y))
+      (data) in
+  let avg_mse = (mse (f %> fst) ds +. mse (f %> snd) ds) /. 2.0 in
+  let line_dist =
+    let (x, y) = f (fst (List.hd data)) in
+    sqrt (abs_float ((x *. x) -. (y *. y))) in
+  avg_mse +. (line_dist *. line_dist)
   
 let grad_desc ~loss_f ~rate ~threshold ~epochs ~model params data =
   let rec grad_desc current_epoch params =

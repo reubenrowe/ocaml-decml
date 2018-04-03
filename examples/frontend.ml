@@ -1,3 +1,4 @@
+open Containers
 open Decml
 
 let data_file = ref None
@@ -43,24 +44,17 @@ let usage = "usage: [-iterations <int>] \
 
 let () = Arg.parse speclist (fun _ -> ()) usage
 
-let data =
+let get_data extract =
   match !data_file with
   | None ->
     failwith "Must specify a data file!"
-  | Some f ->
-    let load =
-      Data.of_csv_file
-        (List.map 
-          (fun xs -> 
-            let x = float_of_string (List.nth xs 0) in
-            let y = float_of_string (List.nth xs 1) in
-            x, y)) in
-    load f
+  | Some file ->
+    Data.of_csv_file extract file
 
-let rec output f x =
+let rec output f pp x =
   if Containers.Float.(x <= !end_x) then
     let () = 
-      print_endline
-        (Format.sprintf "%f %f" x (f x)) in
-    output f (x +. !step)
+      print_string
+        (Format.sprintf "@[<h>%f %a@]@." x pp (f x)) in
+    output f pp (x +. !step)
     

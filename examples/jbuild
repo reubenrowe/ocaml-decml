@@ -1,7 +1,7 @@
 (jbuild_version 1)
 
 (executables
-  ((names (linear_regression))
+  ((names (linear_regression confidence_interval))
    (libraries (decml containers))
    (preprocess (pps (decml.ppx)))
   ))
@@ -9,4 +9,9 @@
 (alias 
   ((name linear_regression_demo)
    (deps (linear_regression.exe))
+   (action  (run ${<} -data-file ../../../examples/data/cats_data.csv))))
+
+(alias 
+  ((name confidence_interval_demo)
+   (deps (confidence_interval.exe))
    (action  (run ${<} -data-file ../../../examples/data/cats_data.csv))))

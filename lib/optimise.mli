@@ -4,6 +4,8 @@ val mse : ('a, Carrier.t) loss_function
 
 val cross_entropy : ('a, Carrier.t list) loss_function
 
+val confidence_interval : ('a, Carrier.t * Carrier.t) loss_function
+
 val set_dx : float -> unit
 
 val grad_desc : 
