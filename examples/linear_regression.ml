@@ -10,11 +10,10 @@ let%model linear x = ([%pc 1] *. x) +. [%pc 0]
 
 let data = 
   get_data
-    (List.map 
-      (fun xs -> 
-        let x = float_of_string (List.nth xs 0) in
-        let y = float_of_string (List.nth xs 1) in
-        x, y))
+    (fun xs -> 
+      let x = float_of_string (List.nth xs 0) in
+      let y = float_of_string (List.nth xs 1) in
+      x, y)
 
 let model =
   let%decouple (model, params) = linear in

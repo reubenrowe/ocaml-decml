@@ -13,11 +13,10 @@ let%model ci x =
 
 let data = 
   get_data
-    (List.map 
-      (fun xs -> 
-        let x = float_of_string (List.nth xs 0) in
-        let y = float_of_string (List.nth xs 1) in
-        x, y))
+    (fun xs -> 
+      let x = float_of_string (List.nth xs 0) in
+      let y = float_of_string (List.nth xs 1) in
+      x, y)
 
 let model =
   let%decouple (model, params) = ci in

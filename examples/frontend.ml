@@ -49,7 +49,7 @@ let get_data extract =
   | None ->
     failwith "Must specify a data file!"
   | Some file ->
-    Data.of_csv_file extract file
+    Data.of_csv_file (List.map extract) file
 
 let rec output f pp x =
   if Containers.Float.(x <= !end_x) then
