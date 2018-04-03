@@ -8,7 +8,7 @@ open Frontend
 
 let%model linear x = ([%pc 1] *. x) +. [%pc 0]
 
-let data = 
+let data =
   get_data
     (fun xs -> 
       let x = float_of_string (List.nth xs 0) in

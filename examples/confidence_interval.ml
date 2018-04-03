@@ -13,7 +13,7 @@ let%model ci x =
 
 let data = 
   get_data
-    (fun xs -> 
+    (fun xs ->
       let x = float_of_string (List.nth xs 0) in
       let y = float_of_string (List.nth xs 1) in
       x, y)

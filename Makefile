@@ -4,12 +4,14 @@ CLEAN := clean
 
 # Examples
 
-LINEAR_REGRESSION_EX := examples/linear_regression.exe
-CONFIDENCE_INTERVAL_EX := examples/confidence_interval.exe
+LINEAR_REGRESSION := examples/linear_regression.exe
+CONFIDENCE_INTERVAL := examples/confidence_interval.exe
+REGRESSION_MIXTURE := examples/regression_mixture.exe
 
 ALL_EXAMPLES := \
-	$(LINEAR_REGRESSION_EX) \
-	$(CONFIDENCE_INTERVAL_EX)
+	$(LINEAR_REGRESSION) \
+	$(CONFIDENCE_INTERVAL) \
+	$(REGRESSION_MIXTURE)
 
 # Tests
 
