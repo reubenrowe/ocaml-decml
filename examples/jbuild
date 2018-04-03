@@ -2,7 +2,9 @@
 
 (executables
   ((names (linear_regression))
-  (libraries (decml containers))))
+   (libraries (decml containers))
+   (preprocess (pps (decml.ppx)))
+  ))
 
 (alias 
   ((name linear_regression_demo)
