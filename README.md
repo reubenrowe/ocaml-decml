@@ -71,3 +71,20 @@ opam pin add decml /path/to/decml
 This installs two packages, `decml` (the library) and `decml.ppx` (the PPX
 rewriter), which can then be used by your programs in the usual way by 
 specifying these packages as dependencies.
+
+## Viewing the Output of the PPX Rewriter
+
+Once the PPX package is installed in your OPAM environment, you can view the
+output produced by the PPX rewriter for a given file using:
+
+```bash
+$(ocamlfind query decml.ppx)/ppx.exe <file>
+```
+
+Within the source tree, once the project is compiled you should find the PPX
+rewriter at the following location:
+
+  `_build/default/.ppx/ppx.exe`
+
+This can then be run directly, and expects a filename as a command-line 
+argument.
