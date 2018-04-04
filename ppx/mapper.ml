@@ -268,7 +268,7 @@ let rec rewriter config cookies scope =
     ifthenelse (_test, _then, _else) pexp_loc
     
   in
-  { Err.mapper with 
+  { failing_mapper with 
       expr = fun self ->
         function
         | { pexp_desc = Pexp_ident id } as e ->
