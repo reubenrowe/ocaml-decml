@@ -12,6 +12,13 @@ module Pervasives : sig
   val ( -. ) : (unit, float -> float -> float) t
   val ( *. ) : (unit, float -> float -> float) t
   val ( /. ) : (unit, float -> float -> float) t
+  val ( =  ) : (unit, 'a -> 'a -> bool) t
+  val ( <  ) : (unit, 'a -> 'a -> bool) t
+  val ( <= ) : (unit, 'a -> 'a -> bool) t
+  val ( >  ) : (unit, 'a -> 'a -> bool) t
+  val ( >= ) : (unit, 'a -> 'a -> bool) t
+  val ( || ) : (unit, bool -> bool -> bool) t
+  val ( && ) : (unit, bool -> bool -> bool) t
   val fst : (unit, 'a * 'b -> 'a) t
   val snd : (unit, 'a * 'b -> 'b) t
 end

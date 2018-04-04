@@ -122,14 +122,19 @@ let%model m' x =
   m x, m x +. 1.0
 ```
 
+We can have conditional branching in model definitions.
+
+```ocaml
+let%model abs x =
+  if x < 0.0 then x *. -1.0 else x
+```
+
 We can even define models recursively.
 
 ```ocaml
-let%model rec m x = m (x + 1)
+let%model fact x =
+  if x <= 0.0 then [%pc 1] else x *. fact (x -. [%pc 1])
 ```
-
-This is a silly example, of course, because this is a non-terminating function,
-but it serves to show that recursive definitions are possible for models.
 
 We can decouple models using the %decouple inline extension.
 
@@ -177,7 +182,7 @@ Thus the following is statically disallowed - we decouple the two models from
 their parameter vectors, and then try to rebind each one with the other's
 parameter vector.
 
-```ocaml 
+```ocaml
 let m, m' =
   let%model m x = ([%pc 1] *. x) +. 2.0 in
   let%model m' x = ([%pc 1] *. x) +. [%pc] in
@@ -210,7 +215,7 @@ This is OK inasmuch as we can still use these functions internally within a
 module as long as we do not export them to the top level.
 
 ```ocaml
-module M : sig 
+module M : sig
   val m : (unit, Carrier.t -> Carrier.t) Model.t
   val m' : (unit, Carrier.t -> Carrier.t) Model.t
 end = struct
@@ -223,13 +228,38 @@ end = struct
 
   (* We can use both of these in building other models that do not contain type
      variables that cannot be generalised, e.g. models with ground types. *)
-  let%model m x = 
+  let%model m x =
     m (x *. [%pc]) 2.0
   let%model m' x =
     let m'' y = y *. 2.0 in
     (m' [%pc 2] m'') +. x
 
 end
+```
+
+We can also recouple parameterised models with their parameter vectors, and then
+use the resulting model to build new models. This allows subsets of the
+parameters to be optimised in order to provide better initial conditions for
+global optimisation.
+
+```ocaml
+let global_optimal =
+  let sub1 =
+    let%model m x = [%pc 1] *. x +. [%pc] in
+    let%decouple (m, p) = m in
+    (* Optimse one set of parameters *)
+    Model.Ex (m, p) in
+  let sub2 =
+    let%model m x = [%pc 1] *. x +. [%pc] in
+    let%decouple (m, p) = m in
+    (* Optimse other set of parameters *)
+    Model.Ex (m, p) in
+  (* Build overall model *)
+  let%model m x = (sub1 x, sub2 x +. [%pc]) in
+  let%decouple (m, p) = m in
+  (* Optimise parameters of global model with initial values obtained by
+     previous optimisations above *)
+  rebind m p
 ```
 
 Note that although we support the translation of multiple decoupling bindings of

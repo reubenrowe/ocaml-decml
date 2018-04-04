@@ -9,6 +9,13 @@ module Pervasives = struct
   let ( -. ) = Ex (Lifted ( -. ), Parameters.null)
   let ( *. ) = Ex (Lifted ( *. ), Parameters.null)
   let ( /. ) = Ex (Lifted ( /. ), Parameters.null)
+  let ( =  ) = Ex (Lifted ( =  ), Parameters.null)
+  let ( <  ) = Ex (Lifted ( <  ), Parameters.null)
+  let ( <= ) = Ex (Lifted ( <= ), Parameters.null)
+  let ( >  ) = Ex (Lifted ( >  ), Parameters.null)
+  let ( >= ) = Ex (Lifted ( >= ), Parameters.null)
+  let ( || ) = Ex (Lifted ( || ), Parameters.null)
+  let ( && ) = Ex (Lifted ( && ), Parameters.null)
   let fst = Ex (Lifted fst, Parameters.null)
   let snd = Ex (Lifted snd, Parameters.null)
 end

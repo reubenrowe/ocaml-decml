@@ -82,6 +82,10 @@ let%model m x = ([%pc 1] *. x) +. [%pc]
 let%model m' x = 
   m x, m x +. 1.0
 
+(* We can have conditional branching in model definitions. *)
+let%model abs x =
+  if x < 0.0 then x *. -1.0 else x
+  
 (* We can even define models recursively. *)
 let%model rec m x = m (x + 1)
 (* This is a silly example, of course, because this is a non-terminating 
@@ -180,6 +184,30 @@ end = struct
     (m' [%pc 2] m'') +. x
 
 end
+
+(* We can also recouple parameterised models with their parameter vectors, and
+   then use the resulting model to build new models. This allows subsets of the
+   parameters to be optimised in order to provide better initial conditions for
+   global optimisation. *)
+
+let global_optimal =
+  let sub1 =
+    let%model m x = [%pc 1] *. x +. [%pc] in
+    let%decouple (m, p) = m in
+    (* Optimse one set of parameters *)
+    Model.Ex (m, p) in
+  let sub2 =
+    let%model m x = [%pc 1] *. x +. [%pc] in
+    let%decouple (m, p) = m in
+    (* Optimse other set of parameters *)
+    Model.Ex (m, p) in
+  (* Build overall model *)
+  let%model m x = (sub1 x, sub2 x +. [%pc]) in
+  let%decouple (m, p) = m in
+  (* Optimise parameters of global model with initial values obtained by 
+     previous optimisations above *)
+  rebind m p
+  
 
 (* Note that although we support the translation of multiple decoupling
     bindings of the form:
