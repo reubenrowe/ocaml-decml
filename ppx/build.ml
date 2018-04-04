@@ -115,4 +115,4 @@ let ifthenelse (_test, _then, _else) loc =
   let loc = { loc with loc_ghost = true } in
   Exp.apply ~loc
     (mk_ident Model.ifelse)
-    [ (Nolabel, _test) ; (Nolabel, _then) ; (Nolabel, _else) ;]
+    [ (Nolabel, Exp.tuple [ _test ; _then ; _else ]) ]
