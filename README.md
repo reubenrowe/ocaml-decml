@@ -29,7 +29,8 @@ let model =
 ```
 
 Some more examples of `DecML` syntax can be found in the 
-[EXAMPLES.md](EXAMPLES.md) file.
+[EXAMPLES.md](EXAMPLES.md) file. Some working examples programs can be found in
+then [examples](./examples) subdirectory.
 
 `DecML` makes building supervised learning models simple because it handles
 model parameters automatically when combining models. Moreover, it uses OCaml's
@@ -44,9 +45,29 @@ DecML depends on the following OCaml packages:
 * `jbuilder`
 * `containers`
 * `csv`
+* `opam-installer` (if installing the package via OPAM)
+
+The PPX preprocessor is written using the `ocaml-migrate-parsetree` package, and
+so it should be portable across compiler versions from 4.02.x upwards which
+themselves support the dependencies listed above.
 
 ## Building and Installing
 
-DecML is compiled using `jbuilder`. The PPX preprocessor is written using the
-`ocaml-migrate-parsetree` package, and so it should be portable across compiler
-versions.
+DecML is compiled using `jbuilder`.
+
+For convenience, a `Makefile` is provided. The library, PPX rewriter, and the
+examples and tests can be built by running:
+
+```bash
+make all
+```
+
+The library and PPX rewriter can be installed in your `OPAM` by:
+
+```bash
+opam pin add decml /path/to/decml
+```
+
+This installs two packages, `decml` (the library) and `decml.ppx` (the PPX
+rewriter), which can then be used by your programs in the usual way by 
+specifying these packages as dependencies.

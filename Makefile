@@ -1,5 +1,6 @@
 JBUILDER := jbuilder
 BUILD := build
+INSTALL := install
 CLEAN := clean
 
 # Examples
@@ -22,7 +23,7 @@ ALL_TESTS := \
 
 # Targets
 
-.PHONY: all lib tests examples clean
+.PHONY: all lib tests examples install clean
 
 lib:
 	$(JBUILDER) $(BUILD)
@@ -32,6 +33,9 @@ tests: $(ALL_TESTS)
 examples: $(ALL_EXAMPLES)
 
 all: lib tests examples
+
+install:
+	$(JBUILDER) $(INSTALL)
 
 %.exe:
 	$(JBUILDER) $(BUILD) $@
