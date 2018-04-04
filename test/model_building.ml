@@ -87,10 +87,14 @@ let%model abs x =
   if x < 0.0 then x *. -1.0 else x
   
 (* We can even define models recursively. *)
-let%model rec m x = m (x + 1)
-(* This is a silly example, of course, because this is a non-terminating 
-   function, but it serves to show that recursive definitions are possible for
-   models. *)
+let%model rec fact x =
+  if x <= 0.0 then [%pc 1] else x *. fact (x -. 1.0)
+
+let%model fact x = 
+  let rec fact x acc =
+    if x <= 0.0 then acc else fact (x -. 1.0) (x *. acc)
+     in
+  fact x [%pc 1]
 
 (* We can decouple models using the %decouple inline extension. *)
 let optimised_model =

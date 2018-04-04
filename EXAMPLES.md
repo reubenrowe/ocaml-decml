@@ -132,8 +132,16 @@ let%model abs x =
 We can even define models recursively.
 
 ```ocaml
+(* Non-tail recursive floating point factorial function. *)
+let%model rec fact x =
+  if x <= 0.0 then [%pc 1] else x *. fact (x -. 1.0)
+
+(* Tail recursive floating point factorial function. *)
 let%model fact x =
-  if x <= 0.0 then [%pc 1] else x *. fact (x -. [%pc 1])
+  let rec fact x acc =
+    if x <= 0.0 then acc else fact (x -. 1.0) (x *. acc)
+     in
+  fact x [%pc 1]
 ```
 
 We can decouple models using the %decouple inline extension.
@@ -271,7 +279,9 @@ let%decouple (m1, p1) = ...
   and (m_n, p_n) = ... in
 ```
 
-the compiler gives an "Unexpected existential" error for the desugaring:
+the compiler gives an "Unexpected existential" error for the desugaring, as
+documented in this [bug](https://caml.inria.fr/mantis/view.php?id=6014) on
+Mantis. :
 
 ```ocaml
 let Decml.Model.Ex (m1, p1) = ...
@@ -279,6 +289,5 @@ let Decml.Model.Ex (m1, p1) = ...
   and Decml.Model.Ex (m_n, p_n) = ... in ...
 ```
 
-as documented in this [bug](https://caml.inria.fr/mantis/view.php?id=6014) on
-Mantis. We set the locations so merlin can associate the error with the sugared
+We set the locations so merlin can associate the error with the sugared
 patterns.

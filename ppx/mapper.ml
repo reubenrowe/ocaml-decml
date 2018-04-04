@@ -17,9 +17,6 @@ end
 open Build
 open Identifiers
 
-[@@@warning "-23"]
-(* Disable warning: all the fields are explicitly used in this record. *)
-
 let args = []
 let reset_args () = ()
 

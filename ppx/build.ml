@@ -83,7 +83,11 @@ let abs_rec scope_depth body pexp_loc =
   let body = 
     apply 
       (weaken 1 body Location.none)
-      (var scope_depth (scope_depth + 2) Location.none) in
+      (var 0 (scope_depth + 2) Location.none) in
+  (* TODO: Could we optimise this by using:
+             min(max(scope_depth, 1), 1)
+           instead of:
+             scope_depth *)
   let e = Exp.apply (mk_ident Model.abs_rec) [Nolabel, body] in
   { e with pexp_loc }
 

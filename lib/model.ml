@@ -216,7 +216,7 @@ let ifelse (type a b)
   Ex (Boxed (M model), Parameters.(merge p1 (merge p2 p3)))
 
 let abs_rec (type a b c) (m : ((a * ((a -> b) * c)), b) t) =
-  let rec fixpoint f = f (fixpoint f) in
+  let rec fixpoint f x = f (fixpoint f) x in
   match abs (abs m) with
   | Ex (Lifted _, _) ->
     (* abs does not create a Lifted model *)
