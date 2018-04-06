@@ -1,5 +1,14 @@
 # Examples of `DecML` Syntax
 
+Contents:
+
+* [Building Models](#markdown-header-building-models)
+* [Decoupling Parameters for Optimisation](#markdown-header-decoupling-parameters-for-optimisation)
+* [Recoupling Parameters](#markdown-header-recoupling-parameters)
+* [Miscellaneous Issues](#markdown-header-miscellaneous-issues)
+
+## Building Models
+
 We can define models using a `[%model ... ]` extension, within which we can nest
 `[%pc ... ]` extensions to specify model parameters. The parameters take the
 initial value specified in the `[%pc ... ]` extension.
@@ -163,6 +172,8 @@ let%model fact x =
   fact x [%pc 1]
 ```
 
+## Decoupling Parameters for Optimisation
+
 We can decouple models using the %decouple inline extension.
 
 ```ocaml
@@ -264,6 +275,8 @@ end = struct
 end
 ```
 
+## Recoupling Parameters
+
 We can also recouple parameterised models with their parameter vectors, and then
 use the resulting model to build new models. This allows subsets of the
 parameters to be optimised in order to provide better initial conditions for
@@ -288,6 +301,8 @@ let global_optimal =
      previous optimisations above *)
   rebind m p
 ```
+
+## Miscellaneous Issues
 
 Note that although we support the translation of multiple decoupling bindings of
 the form:
