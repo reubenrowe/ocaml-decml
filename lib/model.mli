@@ -117,16 +117,13 @@ val rebind_open :
     an appropriate parameter vector and produces an evaluation function for it,
     which requires an environment with values for the free variables. *)
 
-(** {0} Combinators for building models *)
 
-(* 
-val lift : 'a -> (unit, 'a) t
+(** {0 Configuration} *)
 
-val lift_lazy : (unit -> 'a) -> (unit, 'a) t
- *)
-
- val default_constant : Carrier.t -> unit
- (** Sets the default initial value to be used for provisional constants. *)
+val default_constant : Carrier.t -> unit
+(** Sets the default initial value to be used for provisional constants. *)
+   
+(** {0 Combinators for building models} *)
 
 (** {1 Basic Abductive Calculus} *)
 
@@ -168,3 +165,8 @@ val ifelse : ('a, bool) t * ('a, 'b) t * ('a, 'b) t -> ('a, 'b) t
 val abs_rec : (('a * (('a -> 'b) * 'c)), 'b) t -> ('c, 'a -> 'b) t
 (** Abstraction of a recursive function, where the argument is the top variable
     in the context, and the recursive instance variable is the second one. *)
+
+(** {1 Meta Functions} *)
+
+val fmap : ('a -> 'b) -> ('c, 'a) t -> ('c, 'b) t
+(** Functorial lifting of arrows. *)

@@ -57,6 +57,7 @@ module Model = struct
   let _false   = Ldot (_module_name, "_false")
   let ifelse   = Ldot (_module_name, "ifelse")
   let abs_rec  = Ldot (_module_name, "abs_rec")
+  let fmap     = Ldot (_module_name, "fmap")
 end
 
 module Overlay = struct

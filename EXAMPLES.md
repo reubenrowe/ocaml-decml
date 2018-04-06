@@ -64,9 +64,9 @@ let avg =
 ```
 
 Note that we should not place a let-binding within a `[%lift ... ]` extension
-because the PPX will only lift the let-bound expression.
-
-However we can use let-bindings within inline %lift extensions.
+because the PPX will lift the let-bound expression when what we intend is that
+the let-continuation is lifted. This behavious is in order to support inlining
+of %lift extensions, as follows.
 
 ```ocaml
 let%lift avg =
@@ -127,6 +127,25 @@ We can have conditional branching in model definitions.
 ```ocaml
 let%model abs x =
   if x < 0.0 then x *. -1.0 else x
+```
+
+We can use constructors from the standard library.
+
+```ocaml
+let%model bools = true, false
+let%model int_list = [1;2;3;4]
+```
+
+We can acutally use arbitrary constructors that are in scope.
+
+```ocaml
+type 'a expr =
+  | Const of 'a
+  | Var of string
+  | Add of 'a expr * 'a expr
+  | Mult of 'a expr * 'a expr
+
+let%model expr = Mult (Const 3, Add(Var "x", Const 1))
 ```
 
 We can even define models recursively.

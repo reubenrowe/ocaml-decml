@@ -1,4 +1,5 @@
 open Containers
+open   List
 
 open Migrate_parsetree
 open   Ast_404
@@ -120,3 +121,44 @@ let ifthenelse (_test, _then, _else) loc =
   Exp.apply ~loc
     (mk_ident Model.ifelse)
     [ (Nolabel, Exp.tuple [ _test ; _then ; _else ]) ]
+
+let var_name idx =
+  Format.sprintf "_%i" idx
+
+let constructor (e, (cstr, data)) scope_depth loc =
+  let loc = { loc with loc_ghost = true } in
+  let length =  length data in
+  if length = 0 then
+    lift { e with pexp_loc = loc } scope_depth loc
+  else
+    let pat =
+      let rec pat idx =
+        let var = var_name idx in
+        if idx = length - 1 then
+          Pat.var (mknoloc var)
+        else
+          Pat.tuple [Pat.var (mknoloc var); (pat (idx + 1))] in
+      pat 0 in
+    let body =
+      let vars =
+        List.init length 
+          (fun idx -> Exp.ident (mknoloc (Longident.Lident (var_name idx)))) in
+      if length = 1 then
+        Exp.construct cstr (Some (hd vars))
+      else
+        Exp.construct cstr (Some (Exp.tuple vars)) in
+    let f = Exp.fun_ Nolabel None pat body in
+    let arg = 
+      if length = 1 then
+        hd data
+      else
+        let d, ds = hd_tl (rev data) in
+        List.fold_left 
+          (fun arg d -> 
+            Exp.apply (mk_ident Model.pair) [(Nolabel, Exp.tuple [d; arg])])
+          d ds in
+    let { pexp_desc } =
+      Exp.apply 
+        (Exp.ident (mknoloc Model.fmap))
+        [ (Nolabel, f); (Nolabel, arg) ] in
+    {e with pexp_desc; pexp_loc = loc}

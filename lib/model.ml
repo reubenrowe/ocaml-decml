@@ -224,3 +224,13 @@ let abs_rec (type a b c) (m : ((a * ((a -> b) * c)), b) t) =
   | Ex (Boxed (M m), ps) ->
     let m input = fixpoint (m input) in
     Ex (Boxed (M m), ps)
+
+let fmap f (type ctxt) (x : (ctxt, 'a) t) =
+  let Ex (x, x_params) = x in
+  let x_f =
+    match x with
+    | Lifted x ->
+      fun _ -> f x
+    | Boxed M x ->
+      fun input -> f (x input) in
+  Ex (Boxed (M x_f), x_params)

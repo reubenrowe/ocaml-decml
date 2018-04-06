@@ -266,6 +266,18 @@ let rec rewriter config cookies scope =
     let _then = self.expr self _then in
     let _else = self.expr self _else in
     ifthenelse (_test, _then, _else) pexp_loc
+
+  and constructor self (e, (cstr, data)) pexp_loc =
+    let data =
+      match data with
+      | None ->
+        []
+      | Some { pexp_desc = Pexp_tuple data } ->
+        data
+      | Some expr ->
+        [ expr ] in
+    let data = List.map (self.expr self) data in
+    constructor (e, (cstr, data)) (List.length scope) pexp_loc
     
   in
   { failing_mapper with 
@@ -311,8 +323,8 @@ let rec rewriter config cookies scope =
             Location.raise_errorf ~loc:pexp_loc
               "Only 2-tuples supported!"
           end
-        | { pexp_desc = Pexp_construct _; pexp_loc } ->
-          Location.raise_errorf ~loc:pexp_loc "Not implemented!"
+        | { pexp_desc = Pexp_construct (cstr, data); pexp_loc } as e ->
+          constructor self (e, (cstr, data)) pexp_loc
         | { pexp_desc = Pexp_ifthenelse (_test, _then, Some _else); 
             pexp_loc } ->
           ifthenelse self (_test, _then, _else) pexp_loc

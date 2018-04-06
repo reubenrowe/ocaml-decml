@@ -85,7 +85,20 @@ let%model m' x =
 (* We can have conditional branching in model definitions. *)
 let%model abs x =
   if x < 0.0 then x *. -1.0 else x
-  
+
+(* We can use constructors from the standard library. *)
+let%model bools = true, false
+let%model int_list = [1;2;3;4]
+
+(* We can acutally use arbitrary constructors that are in scope. *)
+type 'a expr =
+  | Const of 'a
+  | Var of string
+  | Add of 'a expr * 'a expr
+  | Mult of 'a expr * 'a expr
+
+let%model expr = Mult (Const 3, Add(Var "x", Const 1))
+
 (* We can even define models recursively. *)
 let%model rec fact x =
   if x <= 0.0 then [%pc 1] else x *. fact (x -. 1.0)
