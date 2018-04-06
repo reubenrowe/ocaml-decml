@@ -2,10 +2,10 @@
 
 Contents:
 
-* [Building Models](#markdown-header-building-models)
-* [Decoupling Parameters for Optimisation](#markdown-header-decoupling-parameters-for-optimisation)
-* [Recoupling Parameters](#markdown-header-recoupling-parameters)
-* [Miscellaneous Issues](#markdown-header-miscellaneous-issues)
+* [Building Models](#building-models)
+* [Decoupling Parameters for Optimisation](#decoupling-parameters-for-optimisation)
+* [Recoupling Parameters](#recoupling-parameters)
+* [Miscellaneous Issues](#miscellaneous-issues)
 
 ## Building Models
 
