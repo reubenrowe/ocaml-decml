@@ -111,6 +111,7 @@ val rebind :
   (unit, 'b, 'c) parameterised -> 'c Parameters.t -> 'b
 (** Rebinds a parameterised function with an appropriate parameter vector and
     evaluates it. *)
+
 val rebind_open : 
   ('a, 'b, 'c) parameterised -> 'c Parameters.t -> 'a -> 'b
 (** Rebinds an open parameterised function (i.e. containing free variables) with

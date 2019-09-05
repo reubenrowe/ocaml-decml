@@ -4,7 +4,6 @@ module Key = struct
 
   type t = int
 
-  let equal k k' = k = k'
   let compare k k' = compare k k'
 
   let current = ref 0
@@ -32,7 +31,7 @@ module Parameters = struct
   let null = P Map.empty
 
   let merge (P p) (P p') =
-    P (Map.merge (fun k v v' -> Option.or_ ~else_:v' v) p p')
+    P (Map.merge (fun _ v v' -> Option.or_ ~else_:v' v) p p')
 
   let unit (P v) =
     P (Map.map (fun _ -> 1.0) v)
@@ -164,7 +163,7 @@ let let_bind m m' =
   app (abs m') m
 
 let rec permute : type a b . (a, b) perm -> b -> a =
-  fun (type a b) (perm : (a, b) perm) (ctxt : b) ->
+  fun perm ctxt ->
   match perm, ctxt with
   | Weak, (_, ctxt) -> 
     ctxt

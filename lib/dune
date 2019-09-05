@@ -1,0 +1,4 @@
+(library
+ (name decml)
+ (public_name decml)
+ (libraries containers csv))

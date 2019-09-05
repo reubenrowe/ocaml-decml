@@ -22,44 +22,44 @@ let reset_args () = ()
 
 let dest_exp_const =
   function
-  | { pexp_desc = Pexp_constant Pconst_float   (c, _) }
-  | { pexp_desc = Pexp_constant Pconst_string  (c, _) }
-  | { pexp_desc = Pexp_constant Pconst_integer (c, _) } ->
+  | { pexp_desc = Pexp_constant Pconst_float   (c, _); _ }
+  | { pexp_desc = Pexp_constant Pconst_string  (c, _); _ }
+  | { pexp_desc = Pexp_constant Pconst_integer (c, _); _ } ->
     c
-  | { pexp_loc } ->
+  | { pexp_loc; _ } ->
     Err.const_exp pexp_loc
 
 let dest_pc_ext req_cont ext loc =
   match ext with
-  | { txt }, payload when is_pc_ext txt ->
+  | { txt; _ }, payload when is_pc_ext txt ->
     begin match req_cont, payload with
     | _, PStr [] ->
       Some (None, None)
     | _, PStr [{ pstr_desc = Pstr_eval ( 
-          { pexp_desc = Pexp_let (_, bindings, cont) }, 
-        _)}] ->
+          { pexp_desc = Pexp_let (_, bindings, cont); _ }, 
+        _); _}] ->
       let bindings =
         List.map
           (function
-            | { pvb_pat = { ppat_desc = Ppat_var _ }; pvb_expr } as pvb ->
+            | { pvb_pat = { ppat_desc = Ppat_var _; _ }; pvb_expr; _ } as pvb ->
               Some pvb, (dest_exp_const pvb_expr, pvb_expr.pexp_loc)
-            | { pvb_loc } ->
+            | { pvb_loc; _ } ->
               Err.pattern pvb_loc)
           (bindings) in
       Some (Some bindings, Some cont)
-    | _, PStr [{ pstr_desc = Pstr_eval (({ pexp_loc } as e), _) } ] ->
+    | _, PStr [{ pstr_desc = Pstr_eval (({ pexp_loc; _ } as e), _); _ } ] ->
       Some (Some [(None, (dest_exp_const e, pexp_loc))], None)
-    | false, PStr [{ pstr_desc = Pstr_value (_, bindings)}] ->
+    | false, PStr [{ pstr_desc = Pstr_value (_, bindings); _}] ->
       let bindings =
         List.map
           (function
-            | { pvb_pat = { ppat_desc = Ppat_var _ }; pvb_expr } as pvb ->
+            | { pvb_pat = { ppat_desc = Ppat_var _; _ }; pvb_expr; _ } as pvb ->
               Some pvb, (dest_exp_const pvb_expr, pvb_expr.pexp_loc)
-            | { pvb_loc } ->
+            | { pvb_loc; _ } ->
               Err.pattern pvb_loc)
           (bindings) in
       Some (Some bindings, None)
-    | true, PStr [{ pstr_desc = Pstr_value (_, bindings)}] ->
+    | true, PStr [{ pstr_desc = Pstr_value (_, _); _}] ->
       Err.continuation loc
     | _ ->
       Err.payload loc
@@ -69,34 +69,34 @@ let dest_pc_ext req_cont ext loc =
 
 let dest_lift_ext req_cont ext loc =
   match ext with
-  | { txt }, payload when is_lift_ext txt ->
+  | { txt; _ }, payload when is_lift_ext txt ->
     begin match req_cont, payload with
     | _, PStr [{ pstr_desc = Pstr_eval ( 
-          { pexp_desc = Pexp_let (_, bindings, cont) }, 
-        _)}] ->
+          { pexp_desc = Pexp_let (_, bindings, cont); _ }, 
+        _); _}] ->
       let bindings =
         List.map
           (function
-            | { pvb_pat = { ppat_desc = Ppat_var _ }; 
-                pvb_expr; pvb_loc } as pvb ->
+            | { pvb_pat = { ppat_desc = Ppat_var _; _ }; 
+                pvb_expr; pvb_loc; _ } as pvb ->
               Some pvb, (Some pvb_expr, pvb_loc)
-            | { pvb_loc } ->
+            | { pvb_loc; _ } ->
               Err.pattern pvb_loc)
           (bindings) in
       Some (bindings, Some cont)
-    | _, PStr [{ pstr_desc = Pstr_eval (({ pexp_loc } as e), _) } ] ->
+    | _, PStr [{ pstr_desc = Pstr_eval (({ pexp_loc; _ } as e), _); _ } ] ->
       Some ([(None, (Some e, pexp_loc))], None)
-    | false, PStr [{ pstr_desc = Pstr_value (_, bindings)}] ->
+    | false, PStr [{ pstr_desc = Pstr_value (_, bindings); _}] ->
       let bindings =
         List.map
           (function
-          | { pvb_pat = { ppat_desc = Ppat_var _ }; pvb_loc } as pvb ->
+          | { pvb_pat = { ppat_desc = Ppat_var _; _ }; pvb_loc; _ } as pvb ->
             Some pvb, (None, pvb_loc)
-          | { pvb_loc } ->
+          | { pvb_loc; _ } ->
             Err.pattern pvb_loc)
         (bindings) in
       Some (bindings, None)
-    | true, PStr [{ pstr_desc = Pstr_value (_, bindings)}] ->
+    | true, PStr [{ pstr_desc = Pstr_value (_, _); _}] ->
       Err.continuation loc
     | _ ->
       Err.payload loc
@@ -108,47 +108,47 @@ let dest_model_ext req_cont ext loc =
   let check_bindings bindings =
     List.iter
       (function
-        | { pvb_pat = { ppat_desc = Ppat_var _ } } -> ()
-        | { pvb_loc }                              -> Err.pattern pvb_loc)
+        | { pvb_pat = { ppat_desc = Ppat_var _; _ }; _ } -> ()
+        | { pvb_loc; _ }                              -> Err.pattern pvb_loc)
       (bindings) in
   match ext with
-  | { txt }, payload when is_model_ext txt ->
+  | { txt; _ }, payload when is_model_ext txt ->
     begin match req_cont, payload with
     | _, PStr [{ pstr_desc = Pstr_eval ( 
           { pexp_desc = Pexp_let (Recursive, 
-              [{ pvb_pat = { ppat_desc = Ppat_var { txt } } } as pvb], cont) },
-        _)}] ->
+              [{ pvb_pat = { ppat_desc = Ppat_var { txt ; _} ; _} ; _} as pvb], cont) ; _},
+        _); _}] ->
       Some (`LETREC (txt, pvb, Some cont))
     | false, 
       PStr [{ pstr_desc = Pstr_value (Recursive, 
-                [{ pvb_pat = { ppat_desc = Ppat_var { txt } } } as pvb]
-              )}] ->
+                [{ pvb_pat = { ppat_desc = Ppat_var { txt ; _} ; _}; _ }; _ as pvb]
+              ); _}] ->
       Some (`LETREC (txt, pvb, None))
     | _, PStr [{ pstr_desc = Pstr_eval ( 
           { pexp_desc = Pexp_let (Recursive, 
-              [{ pvb_pat = { ppat_desc = _ }; pvb_loc }], _) },
-        _)}]
+              [{ pvb_pat = { ppat_desc = _ ; _}; pvb_loc ; _}], _) ; _},
+        _); _}]
     | false, 
       PStr [{ pstr_desc = Pstr_value (Recursive, 
-                [{ pvb_pat = { ppat_desc = _ }; pvb_loc }]
-              )}] ->
+                [{ pvb_pat = { ppat_desc = _ ; _}; pvb_loc; _ }]
+              ); _}] ->
       Err.pattern pvb_loc
     | _, PStr [{ pstr_desc = Pstr_eval ( 
-          { pexp_desc = Pexp_let (Recursive, _, _); pexp_loc = loc },
-        _)}]
+          { pexp_desc = Pexp_let (Recursive, _, _); pexp_loc = loc ; _},
+        _); _}]
     | false, PStr [{ pstr_desc = Pstr_value (Recursive, _ ); pstr_loc = loc}] ->
       Err.rec_model loc
     | _, PStr [{ pstr_desc = Pstr_eval ( 
-          { pexp_desc = Pexp_let (Nonrecursive, bindings, cont) }, 
-        _)}] ->
+          { pexp_desc = Pexp_let (Nonrecursive, bindings, cont) ; _}, 
+        _); _}] ->
       let () = check_bindings bindings in
       Some (`LET (bindings, Some cont))
-    | false, PStr [{ pstr_desc = Pstr_value (Nonrecursive, bindings)}] ->
+    | false, PStr [{ pstr_desc = Pstr_value (Nonrecursive, bindings); _}] ->
       let () = check_bindings bindings in
       Some (`LET (bindings, None))
-    | _, PStr [{ pstr_desc = Pstr_eval (e, _) } ] ->
+    | _, PStr [{ pstr_desc = Pstr_eval (e, _); _ } ] ->
       Some (`IMMEDIATE e)
-    | true, PStr [{ pstr_desc = Pstr_value (_, bindings)}] ->
+    | true, PStr [{ pstr_desc = Pstr_value (_, _); _}] ->
       Err.continuation loc
     | _ ->
       Err.payload loc
@@ -162,25 +162,24 @@ let dest_decouple_ext req_cont ext loc =
       (function
         | { pvb_pat = { 
               ppat_desc = Ppat_tuple [
-                { ppat_desc = Ppat_var _ } ; 
-                { ppat_desc = Ppat_var _ } ; ] }; 
-            pvb_expr; pvb_loc } ->
-          ()
-        | { pvb_loc } ->
+                { ppat_desc = Ppat_var _; _ } ; 
+                { ppat_desc = Ppat_var _; _ } ; ]; _ }; 
+          _ } -> ()
+        | { pvb_loc; _ } ->
           Err.decouple pvb_loc)
       (bindings) in
   match ext with
-  | { txt }, payload when is_decouple_ext txt ->
+  | { txt; _ }, payload when is_decouple_ext txt ->
     begin match req_cont, payload with
     | true, PStr [{ pstr_desc = Pstr_eval ( 
-          { pexp_desc = Pexp_let (_, bindings, cont) }, 
-        _)}] ->
+          { pexp_desc = Pexp_let (_, bindings, cont) ; _}, 
+        _); _}] ->
       let () = check_bindings bindings in
       Some (bindings, Some cont)
-    | false, PStr [{ pstr_desc = Pstr_value (_, bindings)}] ->
+    | false, PStr [{ pstr_desc = Pstr_value (_, bindings); _}] ->
       let () = check_bindings bindings in
       Some (bindings, None)
-    | true, PStr [{ pstr_desc = Pstr_value (_, bindings)}] ->
+    | true, PStr [{ pstr_desc = Pstr_value (_, _); _}] ->
       Err.continuation loc
     | _ ->
       Err.payload loc
@@ -202,7 +201,7 @@ let dest_ext ?(req_cont=true) ext loc =
 
 let rec rewriter config cookies scope =
 
-  let ident { txt } ({ pexp_loc } as e) =
+  let ident { txt; _ } ({ pexp_loc; _ } as e) =
     let idx = Option.map fst (List.find_idx (Longident.equal txt) scope) in
     match idx with
     | None ->
@@ -226,7 +225,7 @@ let rec rewriter config cookies scope =
 
   and abs (lbl, default, pat, body) pexp_loc =
     match lbl, default, pat with
-    | Nolabel, None, { ppat_desc = Ppat_var { txt }} ->
+    | Nolabel, None, { ppat_desc = Ppat_var { txt; _ }; _} ->
       let self = rewriter config cookies ((Longident.Lident txt) :: scope) in
       let body = self.expr self body in
       abs body pexp_loc
@@ -272,7 +271,7 @@ let rec rewriter config cookies scope =
       match data with
       | None ->
         []
-      | Some { pexp_desc = Pexp_tuple data } ->
+      | Some { pexp_desc = Pexp_tuple data; _ } ->
         data
       | Some expr ->
         [ expr ] in
@@ -283,38 +282,38 @@ let rec rewriter config cookies scope =
   { failing_mapper with 
       expr = fun self ->
         function
-        | { pexp_desc = Pexp_ident id } as e ->
+        | { pexp_desc = Pexp_ident id; _ } as e ->
           ident id e
-        | { pexp_desc = Pexp_constant _; pexp_loc } as e ->
+        | { pexp_desc = Pexp_constant _; pexp_loc; _ } as e ->
           lift e (List.length scope) pexp_loc
-        | { pexp_desc = Pexp_let (Nonrecursive, pvbs, cont); pexp_loc } ->
+        | { pexp_desc = Pexp_let (Nonrecursive, pvbs, cont); pexp_loc; _ } ->
           let bindings =
             List.map
               (function
-                | { pvb_pat = { ppat_desc = Ppat_var { txt } }; 
-                    pvb_expr = { pexp_loc } as e } ->
+                | { pvb_pat = { ppat_desc = Ppat_var { txt; _ }; _ }; 
+                    pvb_expr = { pexp_loc; _ } as e; _ } ->
                   (e, pexp_loc), txt
-                | { pvb_loc } ->
+                | { pvb_loc; _ } ->
                   Err.pattern pvb_loc)
               (pvbs) in
           let_bind (self.expr self) bindings cont pexp_loc
         | { pexp_desc = 
               Pexp_let (Recursive, 
-                [{ pvb_pat = { ppat_desc = Ppat_var { txt } }; pvb_expr }],  
+                [{ pvb_pat = { ppat_desc = Ppat_var { txt; _ }; _ }; pvb_expr; _ }],  
                 cont) ;
-              pexp_loc } ->
+              pexp_loc; _ } ->
           let_rec txt pvb_expr cont pexp_loc
         | { pexp_desc = 
-              Pexp_let (Recursive, [{ pvb_pat = { ppat_desc = _ }; 
-                                      pvb_loc }], _) } ->
+              Pexp_let (Recursive, [{ pvb_pat = { ppat_desc = _; _ }; 
+                                      pvb_loc; _ }], _); _ } ->
           Err.pattern pvb_loc
-        | { pexp_desc = Pexp_let (Recursive, _, _); pexp_loc } ->
+        | { pexp_desc = Pexp_let (Recursive, _, _); pexp_loc; _ } ->
           Err.rec_model pexp_loc
-        | { pexp_desc = Pexp_fun (lbl, default, pat, body); pexp_loc } ->
+        | { pexp_desc = Pexp_fun (lbl, default, pat, body); pexp_loc; _ } ->
           abs (lbl, default, pat, body) pexp_loc
-        | { pexp_desc = Pexp_apply (e, args); pexp_loc } ->
+        | { pexp_desc = Pexp_apply (e, args); pexp_loc; _ } ->
           apply self e args pexp_loc
-        | { pexp_desc = Pexp_tuple es; pexp_loc } as e ->
+        | { pexp_desc = Pexp_tuple es; pexp_loc; _ } as e ->
           begin match es with
           | [ _; _ ] ->
             pair self e es pexp_loc
@@ -323,14 +322,14 @@ let rec rewriter config cookies scope =
             Location.raise_errorf ~loc:pexp_loc
               "Only 2-tuples supported!"
           end
-        | { pexp_desc = Pexp_construct (cstr, data); pexp_loc } as e ->
+        | { pexp_desc = Pexp_construct (cstr, data); pexp_loc; _ } as e ->
           constructor self (e, (cstr, data)) pexp_loc
         | { pexp_desc = Pexp_ifthenelse (_test, _then, Some _else); 
-            pexp_loc } ->
+            pexp_loc; _ } ->
           ifthenelse self (_test, _then, _else) pexp_loc
-        | { pexp_desc = Pexp_ifthenelse (_, _, None); pexp_loc } ->
+        | { pexp_desc = Pexp_ifthenelse (_, _, None); pexp_loc; _ } ->
           Err.ifthenelse pexp_loc
-        | { pexp_desc = Pexp_extension ext ; pexp_loc } as expr ->
+        | { pexp_desc = Pexp_extension ext ; pexp_loc; _ } as expr ->
           begin match dest_ext ext pexp_loc with
           | `PC (None, Some _) ->
             assert false
@@ -343,7 +342,7 @@ let rec rewriter config cookies scope =
               List.map 
                 (fun (vb, payload) -> 
                   match Option.get_exn vb with
-                  | { pvb_pat = { ppat_desc = Ppat_var { txt } } } ->
+                  | { pvb_pat = { ppat_desc = Ppat_var { txt; _ }; _ }; _ } ->
                     payload, txt
                   | _ -> assert false) 
                 (bindings) in
@@ -362,7 +361,7 @@ let rec rewriter config cookies scope =
               List.map 
                 (fun (vb, payload) -> 
                   match Option.get_exn vb with
-                  | { pvb_pat = { ppat_desc = Ppat_var { txt } } } ->
+                  | { pvb_pat = { ppat_desc = Ppat_var { txt; _ }; _ }; _ } ->
                     (Pair.map1 Option.get_exn payload), txt
                   | _ -> assert false) 
                 (bindings) in
@@ -378,13 +377,13 @@ let rec rewriter config cookies scope =
             let bindings =
               List.map
                 (function
-                  | { pvb_pat = { ppat_desc = Ppat_var { txt } }; 
-                      pvb_expr = { pexp_loc } as e } ->
+                  | { pvb_pat = { ppat_desc = Ppat_var { txt; _ }; _ }; 
+                      pvb_expr = { pexp_loc; _ } as e ; _} ->
                     (e, pexp_loc), txt
                   | _ -> assert false) 
               (bindings) in
             let_bind (self.expr self) bindings (Option.get_exn cont) pexp_loc
-          | `MODEL `LETREC (f, { pvb_expr }, cont) ->
+          | `MODEL `LETREC (f, { pvb_expr; _ }, cont) ->
             let_rec f pvb_expr (Option.get_exn cont) pexp_loc
               
           | `DECOUPLE _ ->
@@ -393,7 +392,7 @@ let rec rewriter config cookies scope =
           | `UNKNOWNEXT ->
             expr
           end
-        | { pexp_loc } ->
+        | { pexp_loc; _ } ->
           Err.unsupported_model pexp_loc
         ;
     }
@@ -410,7 +409,7 @@ let rewriter config cookies =
       expr = 
         begin fun self ->
           function
-          | { pexp_desc = Pexp_extension ext; pexp_loc = loc } as expr ->
+          | { pexp_desc = Pexp_extension ext; pexp_loc = loc; _ } as expr ->
             begin match dest_ext ext loc with
 
             | `PC (None, Some _) ->
@@ -439,7 +438,7 @@ let rewriter config cookies =
               let bindings = 
                 List.map 
                   (fun (vb, (_, loc)) -> 
-                    let { pvb_expr } as vb = Option.get_exn vb in
+                    let { pvb_expr; _ } as vb = Option.get_exn vb in
                     let pvb_expr = lift pvb_expr 0 loc in
                     { vb with pvb_expr }) 
                   (bindings) in
@@ -449,7 +448,7 @@ let rewriter config cookies =
             | `DECOUPLE (bindings, cont) ->
               let bindings =
                 List.map
-                  (fun ({ pvb_expr } as pvb) ->
+                  (fun ({ pvb_expr; _ } as pvb) ->
                     let model = self.expr self pvb_expr in
                     decouple pvb model)
                   (bindings) in
@@ -462,16 +461,16 @@ let rewriter config cookies =
             | `MODEL `LET (bindings, cont) ->
               let bindings =
                 List.map
-                  (fun ({ pvb_expr } as vb) ->
+                  (fun ({ pvb_expr; _ } as vb) ->
                     let pvb_expr = model_mapper.expr model_mapper pvb_expr in
                     { vb with pvb_expr }) 
                 (bindings) in
               let cont = self.expr self (Option.get_exn cont) in
               Exp.let_ ~loc Nonrecursive bindings cont
             
-            | `MODEL `LETREC (f, ({ pvb_expr } as pvb), cont) ->
+            | `MODEL `LETREC (f, ({ pvb_expr; _ } as pvb), cont) ->
               let mapper = rec_model_rewriter config cookies f in
-              let { pexp_loc } as pvb_expr = mapper.expr mapper pvb_expr in
+              let { pexp_loc; _ } as pvb_expr = mapper.expr mapper pvb_expr in
               let pvb_expr = { pvb_expr with pexp_loc = Location.none } in
               let pvb_expr = abs_rec 0 pvb_expr pexp_loc in
               let cont = self.expr self (Option.get_exn cont) in
@@ -500,7 +499,7 @@ let rewriter config cookies =
               let bindings = 
                 List.map 
                   (fun (vb, (_, loc)) -> 
-                    let { pvb_expr } as vb = Option.get_exn vb in
+                    let { pvb_expr; _ } as vb = Option.get_exn vb in
                     let pvb_expr = lift pvb_expr 0 loc in
                     { vb with pvb_expr }) 
                   (bindings) in
@@ -508,7 +507,7 @@ let rewriter config cookies =
             | `DECOUPLE (bindings, None) ->
               let bindings =
                 List.map
-                  (fun ({ pvb_expr } as pvb) ->
+                  (fun ({ pvb_expr; _ } as pvb) ->
                     let model = self.expr self pvb_expr in
                     decouple pvb model)
                   (bindings) in
@@ -516,15 +515,15 @@ let rewriter config cookies =
             | `MODEL `LET (bindings, None) ->
               let bindings =
                 List.map
-                  (fun ({ pvb_expr } as vb) ->
+                  (fun ({ pvb_expr; _ } as vb) ->
                     let pvb_expr = model_mapper.expr model_mapper pvb_expr in
                     { vb with pvb_expr }) 
                 (bindings) in
               Str.value ~loc Nonrecursive bindings
             
-            | `MODEL `LETREC (f, ({ pvb_expr } as pvb), cont) ->
+            | `MODEL `LETREC (f, ({ pvb_expr; _ } as pvb), _) ->
               let mapper = rec_model_rewriter config cookies f in
-              let { pexp_loc } as pvb_expr = mapper.expr mapper pvb_expr in
+              let { pexp_loc; _ } as pvb_expr = mapper.expr mapper pvb_expr in
               let pvb_expr = { pvb_expr with pexp_loc = Location.none } in
               let pvb_expr = abs_rec 0 pvb_expr pexp_loc in
               Str.value ~loc Nonrecursive [ { pvb with pvb_expr } ]

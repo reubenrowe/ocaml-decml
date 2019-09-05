@@ -4,12 +4,9 @@ open   List
 open Migrate_parsetree
 open   Ast_404
 open     Ast_helper
-open     Ast_mapper
 open     Parsetree
 open   Compiler_libs
-open     Asttypes
 open     Location
-open     Longident
 
 open Identifiers
 
@@ -44,7 +41,7 @@ let var idx scope_depth pexp_loc =
   
 let prov_const ?init loc =
   let loc = { loc with loc_ghost = true } in
-  let args = [ (Nolabel, unit) ] in
+  let args = [ ((Nolabel: Ast_404.Asttypes.arg_label), unit) ] in
   let args = 
     match init with
     | None ->
@@ -65,8 +62,8 @@ let lift e scope_depth loc =
           ])) in
   weaken scope_depth e loc
 
-let decouple ({ pvb_pat } as pvb) e =
-  let { ppat_loc = loc } = pvb_pat in
+let decouple ({ pvb_pat; _ } as pvb) e =
+  let { ppat_loc = loc; _ } = pvb_pat in
   let pvb_pat = Pat.construct ~loc (mknoloc Model._Ex) (Some pvb_pat) in
   { pvb with pvb_pat ; pvb_expr = e }
 
@@ -75,9 +72,9 @@ let abs body pexp_loc =
   let e = Exp.apply (mk_ident Model.abs) [Nolabel, body] in
   { e with pexp_loc }
 
-let apply ?(lbl=Nolabel) e e' =
+let apply ?(lbl=(Nolabel : Ast_404.Asttypes.arg_label)) e e' =
   let app = mk_ident Model.app in
-  Exp.apply app [(Nolabel, e); (lbl, e')]
+  Exp.apply app [(Nolabel, e); ((lbl: Ast_404.Asttypes.arg_label), e')]
 
 let abs_rec scope_depth body pexp_loc =
   let pexp_loc = { pexp_loc with loc_ghost = true } in
@@ -157,7 +154,7 @@ let constructor (e, (cstr, data)) scope_depth loc =
           (fun arg d -> 
             Exp.apply (mk_ident Model.pair) [(Nolabel, Exp.tuple [d; arg])])
           d ds in
-    let { pexp_desc } =
+    let { pexp_desc; _ } =
       Exp.apply 
         (Exp.ident (mknoloc Model.fmap))
         [ (Nolabel, f); (Nolabel, arg) ] in
