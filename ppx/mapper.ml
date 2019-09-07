@@ -108,7 +108,8 @@ let dest_model_ext req_cont ext loc =
   let check_bindings bindings =
     List.iter
       (function
-        | { pvb_pat = { ppat_desc = Ppat_var _; _ }; _ } -> ()
+        | { pvb_pat = { ppat_desc = Ppat_var _; _ }; _ }
+        | { pvb_pat = { ppat_desc = Ppat_any; _ }; _ } -> ()
         | { pvb_loc; _ }                              -> Err.pattern pvb_loc)
       (bindings) in
   match ext with
@@ -121,7 +122,7 @@ let dest_model_ext req_cont ext loc =
       Some (`LETREC (txt, pvb, Some cont))
     | false, 
       PStr [{ pstr_desc = Pstr_value (Recursive, 
-                [{ pvb_pat = { ppat_desc = Ppat_var { txt ; _} ; _}; _ }; _ as pvb]
+                [{ pvb_pat = { ppat_desc = Ppat_var { txt ; _} ; _}; _} as pvb]
               ); _}] ->
       Some (`LETREC (txt, pvb, None))
     | _, PStr [{ pstr_desc = Pstr_eval ( 
@@ -136,7 +137,7 @@ let dest_model_ext req_cont ext loc =
     | _, PStr [{ pstr_desc = Pstr_eval ( 
           { pexp_desc = Pexp_let (Recursive, _, _); pexp_loc = loc ; _},
         _); _}]
-    | false, PStr [{ pstr_desc = Pstr_value (Recursive, _ ); pstr_loc = loc}] ->
+    | false, PStr [{ pstr_desc = Pstr_value (Recursive, _); pstr_loc = loc}] ->
       Err.rec_model loc
     | _, PStr [{ pstr_desc = Pstr_eval ( 
           { pexp_desc = Pexp_let (Nonrecursive, bindings, cont) ; _}, 
