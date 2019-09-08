@@ -1,6 +1,9 @@
 open Decml
 open   Model
 
+[@@@ocaml.warning "-32"]
+(* Turn off warning 32 "Unused value", which dune treats as an error *)
+
 (* We can define models using a [%model ... ] extension, within which we can
    nest [%pc ... ] extensions to specify model parameters. The parameters take
    the initial value specified in the [%pc ... ] extension. *)

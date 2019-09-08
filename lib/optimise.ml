@@ -27,7 +27,7 @@ let mse f data =
 let cross_entropy f data =
   let sum =
     fold_left
-      (fun acc d ->
+      (fun _ d ->
         let y = snd d in
         let y_hat = 
           match f (fst d) with

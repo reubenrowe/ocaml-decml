@@ -6,10 +6,10 @@ authors: [
   "Reuben Rowe <reuben.rowe@cantab.net>"
   "Victor Darvariu <victor.darvariu@gmail.com>"
 ]
-build: ["jbuilder" "build"]
-install: ["jbuilder" "install"]
+build: ["dune" "build" "-p" name "-j" jobs]
+install: ["dune" "install"]
 depends: [
-  "jbuilder" {build}
+  "dune" {build & >= "1.0"}
   "ocaml-migrate-parsetree" {build}
   "containers" {build}
   "opam-installer" {install}

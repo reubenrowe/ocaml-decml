@@ -1,11 +1,5 @@
 open Migrate_parsetree
 open   Ast_404
-open     Ast_helper
-open     Ast_mapper
-open     Asttypes
-open     Location
-open     Longident
-open     Parsetree
 
 let pattern loc =
   Location.raise_errorf ~loc "Expecting a singleton variable pattern!"

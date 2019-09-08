@@ -53,7 +53,7 @@ themselves support the dependencies listed above.
 
 ## Building and Installing
 
-DecML is compiled using `jbuilder`.
+DecML is compiled using `dune`.
 
 For convenience, a `Makefile` is provided. The library, PPX rewriter, and the
 examples and tests can be built by running:

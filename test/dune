@@ -1,0 +1,5 @@
+(test
+ (name model_building)
+ (libraries decml)
+ (preprocess
+  (pps decml.ppx)))

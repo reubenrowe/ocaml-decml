@@ -1,6 +1,7 @@
-JBUILDER := jbuilder
+DUNE := dune
 BUILD := build
 INSTALL := install
+TEST := runtest
 CLEAN := clean
 
 # Examples
@@ -14,31 +15,25 @@ ALL_EXAMPLES := \
 	$(CONFIDENCE_INTERVAL) \
 	$(REGRESSION_MIXTURE)
 
-# Tests
-
-MODEL_BUILDING_TEST := test/model_building.exe
-
-ALL_TESTS := \
-	$(MODEL_BUILDING_TEST)
-
 # Targets
 
 .PHONY: all lib tests examples install clean
 
 lib:
-	$(JBUILDER) $(BUILD)
+	$(DUNE) $(BUILD)
 
-tests: $(ALL_TESTS)
+tests:
+	$(DUNE) $(TEST)
 
 examples: $(ALL_EXAMPLES)
 
 all: lib tests examples
 
 install:
-	$(JBUILDER) $(INSTALL)
+	$(DUNE) $(INSTALL)
 
 %.exe:
-	$(JBUILDER) $(BUILD) $@
+	$(DUNE) $(BUILD) $@
 
 clean:
-	$(JBUILDER) $(CLEAN)
+	$(DUNE) $(CLEAN)
