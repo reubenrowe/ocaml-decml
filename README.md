@@ -69,7 +69,7 @@ opam pin add decml /path/to/decml
 ```
 
 This installs two packages, `decml` (the library) and `decml.ppx` (the PPX
-rewriter), which can then be used by your programs in the usual way by 
+rewriter), which can then be used by your programs in the usual way by
 specifying these packages as dependencies.
 
 ## Viewing the Output of the PPX Rewriter
@@ -81,10 +81,9 @@ output produced by the PPX rewriter for a given file using:
 $(ocamlfind query decml.ppx)/ppx.exe <file>
 ```
 
-Within the source tree, once the project is compiled you should find the PPX
-rewriter at the following location:
+After compiling the source, you can run the PPX rewriter directly by using the
+`dune exec` command from the top-level source directory.
 
-  `_build/default/.ppx/ppx.exe`
-
-This can then be run directly, and expects a filename as a command-line 
-argument.
+```bash
+$(dune exec ocamlfind query decml.ppx)/ppx.exe <file>
+```
