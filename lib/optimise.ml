@@ -66,7 +66,7 @@ let grad_desc ~loss_f ~rate ~threshold ~epochs ~model params data =
       (* let () = 
         Format.fprintf Format.err_formatter 
           "@[<h>Step %d. Current loss: %.10f. %a@]@." 
-          epochs (loss_f (model params) data) Parameters.pp params in *)
+          current_epoch loss Parameters.pp params in *)
       let dfs =  (* Partial derivatives at x for each basis of the vector space *)
         let x = random_choose data (Random.get_state ()) in
         let f ps = loss_f (model ps) [x] in

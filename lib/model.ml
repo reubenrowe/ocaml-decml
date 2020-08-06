@@ -136,6 +136,21 @@ let pc ?init () =
   let params = Map.singleton key init in
   Ex (Boxed (M model), Parameters.P params)
 
+let pv n =
+  if n < 0 then
+    invalid_arg (Format.sprintf "%s.pv" __MODULE__)
+  else
+    let params = ref Map.empty in
+    let () =
+      for i = 1 to n do
+        params := Map.add (Key.get_fresh ()) !default_constant !params
+      done in
+    let keys = List.map fst (Map.bindings !params) in
+    let model =
+      fun (params, ()) ->
+        List.map (fun k -> Option.get_exn (Map.get k params)) keys in
+    Ex (Boxed (M model), Parameters.P !params)
+
 let default_constant v = 
   default_constant := v
 

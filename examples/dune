@@ -1,5 +1,9 @@
 (executables
- (names linear_regression confidence_interval regression_mixture)
+ (names
+  linear_regression
+  confidence_interval
+  regression_mixture
+  multivariate_regression)
  (libraries decml containers)
  (preprocess
   (pps decml.ppx)))
@@ -7,21 +11,27 @@
 (alias
  (name linear_regression_demo)
  (deps
-  (:< linear_regression.exe))
- (action
-  (run %{<} -data-file ../../../examples/data/cats_data.csv)))
+  (:< linear_regression.exe)
+  (:data data/cats_data.csv))
+ (action (run %{<} -data-file %{data})))
 
 (alias
  (name confidence_interval_demo)
  (deps
-  (:< confidence_interval.exe))
- (action
-  (run %{<} -data-file ../../../examples/data/cats_data.csv)))
+  (:< confidence_interval.exe)
+  (:data data/cats_data.csv))
+ (action (run %{<} -data-file %{data})))
 
 (alias
  (name regression_mixture_demo)
  (deps
-  (:< regression_mixture.exe))
- (action
-  (run %{<} -iterations=500000 -data-file
-    ../../../examples/data/cats_data.csv)))
+  (:< regression_mixture.exe)
+  (:data data/regression_mixture.csv))
+ (action (run %{<} -data-file %{data})))
+
+(alias
+ (name multivariate_regression_demo)
+ (deps
+  (:< multivariate_regression.exe)
+  (:data data/bh.csv))
+ (action (run %{<} -data-file %{data} -learning-rate 0.000003 -iterations 5000)))

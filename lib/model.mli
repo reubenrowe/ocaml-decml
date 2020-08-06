@@ -131,6 +131,10 @@ val default_constant : Carrier.t -> unit
 val pc : ?init:string -> unit -> (unit, Carrier.t) t
 (** Return a model consisting of a single fresh provisional constant. *)
 
+val pv : int -> (unit, Carrier.t list) t
+(** [pv n] returns a model consisting of a vector of length [n] of fresh
+    provisional constants. *)
+
 val var : (('a * unit), 'a) t
 (** Return a model consisting of a single free variable. *)
 

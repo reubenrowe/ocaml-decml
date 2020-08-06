@@ -28,7 +28,7 @@ let model =
   rebind model params
 ```
 
-Some more examples of `DecML` syntax can be found in the 
+Some more examples of `DecML` syntax can be found in the
 [EXAMPLES.md](EXAMPLES.md) file. Some working examples programs can be found in
 then [examples](./examples) subdirectory.
 
@@ -86,4 +86,18 @@ After compiling the source, you can run the PPX rewriter directly by using the
 
 ```bash
 $(dune exec ocamlfind query decml.ppx)/ppx.exe <file>
+```
+## Running the Demo Models
+
+The [examples](./examples) subdirectory contains some example models.
+These include a linear regression model, a confidence interval model,
+a multivariate regression model, and a mixture of regression models.
+
+These examples can be run as follows.
+
+```bash
+dune build -f @linear_regression_demo
+dune build -f @confidence_interval_demo
+dune build -f @multivariate_regression_demo
+dune build -f @regression_mixture_demo
 ```
