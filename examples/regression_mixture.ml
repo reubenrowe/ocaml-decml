@@ -63,6 +63,3 @@ let model =
   let l2 = Model.Ex (l2, p2) in
   let%decouple (m, p) = [%model fun x -> l1 x, l2 x] in
   rebind m p 
-
-let () =
-  output model (Pair.pp ~sep:" " Float.pp Float.pp) !start_x

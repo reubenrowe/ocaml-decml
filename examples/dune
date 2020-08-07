@@ -4,7 +4,7 @@
   confidence_interval
   regression_mixture
   multivariate_regression)
- (libraries decml containers)
+ (libraries decml containers gnuplot)
  (preprocess
   (pps decml.ppx)))
 
@@ -34,4 +34,4 @@
  (deps
   (:< multivariate_regression.exe)
   (:data data/bh.csv))
- (action (run %{<} -data-file %{data} -learning-rate 0.000003 -iterations 5000)))
+ (action (run %{<} -data-file %{data} -learning-rate 0.000003)))

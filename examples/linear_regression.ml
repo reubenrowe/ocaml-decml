@@ -23,4 +23,30 @@ let model =
   rebind model params
 
 let () =
-  output model Float.pp !start_x
+  match List.map fst data with
+  | [] -> ()
+  | x::xs ->
+    let (min, max) =
+      let rec f (min, max) =
+        function
+        | [] ->
+          (min, max)
+        | x::xs ->
+          let min = if Float.Infix.(x <. min) then x else min in
+          let max = if Float.Infix.(x >. max) then x else max in
+          f (min, max) xs in
+      f (x, x) xs in
+    let min = floor min in
+    let max = ceil max in
+    let open Gnuplot in
+    let open Color in
+    let plot = create () in
+    let () =
+      set ~output:(Output.(create `X11)) plot in
+    let () =
+      plot_many plot [ 
+          (Series.points_xy data ~color:`Blue) ;
+          (Series.lines_xy ~color:`Red
+            [ (min, model min); (max, model max); ]) ;
+        ] in
+    Gnuplot.close plot
