@@ -8,6 +8,7 @@ open     Infix
 type ('a, 'b) loss_function = ('a -> 'b) -> 'a Data.t -> Carrier.t
 
 let dx = ref 0.00001
+let min_slope = ref 0.0000000000000000000275
 
 let set_dx n = 
   if Containers.Float.compare n 0.0 <= 0
@@ -56,18 +57,26 @@ let confidence_interval f data =
 let grad_desc ~loss_f ~rate ~threshold ~epochs ~model params data =
   let rec grad_desc current_epoch params =
     let loss = loss_f (model params) data in
-    if current_epoch >= epochs || Containers.Float.(loss <= threshold)  then
+    if Containers.Float.(loss <= threshold) then
       let () = 
         Format.fprintf Format.err_formatter
-          "Completed optimisation after %i iterations with error %.5f@."
+          "Reached error threshold after %i iterations: error %.5f@."
           current_epoch loss in
+      params
+    else if current_epoch >= epochs then
+      let () = 
+        Format.fprintf Format.err_formatter
+          "Completed maximum number of iterations: error %.5f@."
+          loss in
       params
     else
       (* let () = 
         Format.fprintf Format.err_formatter 
-          "@[<h>Step %d. Current loss: %.10f. %a@]@." 
+          "@[<h>Step %d. Current error: %.20f. %a@]@." 
           current_epoch loss Parameters.pp params in *)
-      let dfs =  (* Partial derivatives at x for each basis of the vector space *)
+      (* Compute partial derivatives at random data point x for each basis of
+         the vector space *)
+      let dfs =
         let x = random_choose data (Random.get_state ()) in
         let f ps = loss_f (model ps) [x] in
         map 
@@ -77,8 +86,21 @@ let grad_desc ~loss_f ~rate ~threshold ~epochs ~model params data =
               ((f (params <+> b) -. f (params <-> b)) /. (2.0 *. !dx)) in
             -.(rate *. df) <*.> b)
           (bases params) in
-    let params = fold_left plus params dfs in
-    grad_desc (current_epoch + 1) params in
+      let df = sum dfs in
+      let open Containers.Option in
+      (* let () = 
+        Format.fprintf Format.err_formatter 
+          "@[<h>Step %d. df: %a@]@." 
+          current_epoch Parameters.pp (get_exn df) in *)
+      if (map_or ~default:true
+            Carrier.(fun df -> (magnitude df) <= (abs !min_slope)) df) then
+        let () = 
+          Format.fprintf Format.err_formatter
+            "Completed optimisation after %i iterations: error %.5f@."
+            current_epoch loss in
+        params
+      else
+        grad_desc (current_epoch + 1) (plus params (get_exn df)) in
   grad_desc 0 params
 
 let grad_desc ~loss_f ~rate ~threshold ~epochs ~model params data =

@@ -35,6 +35,13 @@ module Parameters = struct
 
   let unit (P v) =
     P (Map.map (fun _ -> 1.0) v)
+  
+  let is_zero (P v) =
+    Map.for_all (fun _ x -> Carrier.(x = zero)) v
+
+  let magnitude (P v) =
+    let open Carrier in
+    Map.fold (fun _ x acc -> (abs x) + acc) v zero
 
   let bases (P v) =
     List.map 
@@ -72,10 +79,26 @@ module Parameters = struct
       Lazy.force err
   let plus (P v) (P v') =
     P (combine (+.) v v')
+  let sum =
+    function
+    | [] ->
+      None
+    | [v] ->
+      Some v
+    | v::vs ->
+      Some (List.fold_left plus v vs)
   let minus (P v) (P v') =
     P (combine (-.) v v')
   let times (P v) (P v') =
     P (combine ( *. ) v v')
+  let product =
+    function
+    | [] ->
+      None
+    | [v] ->
+      Some v
+    | v::vs ->
+      Some (List.fold_left times v vs)
   let dot (P v) (P v') =
     Map.fold (fun _ -> (+.)) (combine ( *. ) v v') 0.0
     
@@ -121,6 +144,9 @@ let rebind_open
   match m with
   | Boxed M model -> fun ctxt -> model (params, ctxt)
   | Lifted f -> fun () -> f
+
+let dimension (Ex (_, P ps)) =
+  Map.cardinal ps
 
 let default_constant = ref 0.0
 

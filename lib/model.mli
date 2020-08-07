@@ -18,6 +18,12 @@ module Parameters : sig
   (** [unit ps] returns the unit vector in the vector space in which [ps] 
       lives. *)
 
+  val is_zero : 'a t -> bool
+  (** Tests whether all the parameters in the given vector are zero. *)
+
+  val magnitude : 'a t -> Carrier.t
+  (** The magnitude of a parameter vector *)
+
   val pp : 'a t Containers.Format.printer
   (** A formatter for printing parameter vectors. *)
 
@@ -72,11 +78,19 @@ module Parameters : sig
   val plus : 'a t -> 'a t -> 'a t
   (** Pointwise addition of two parameter vectors. *)
 
+  val sum : 'a t list -> 'a t Option.t
+  (** Sum of a list of parameter vectors. Returns None if the input list is
+      empty. *)
+
   val minus : 'a t -> 'a t -> 'a t
   (** Pointwise subtraction of two parameter vectors. *)
 
   val times : 'a t -> 'a t -> 'a t
   (** Pointwise multiplication of two parameter vectors. *)
+
+  val product : 'a t list -> 'a t Option.t
+  (** Product of a list of parameter vectors. Returns None if the input list is
+      empty. *)
 
   val dot : 'a t -> 'a t -> Carrier.t
   (** Dot product of two parameter vectors. *)
@@ -118,6 +132,8 @@ val rebind_open :
     an appropriate parameter vector and produces an evaluation function for it,
     which requires an environment with values for the free variables. *)
 
+val dimension : ('a, 'b) t -> int
+(** Returns the dimension of a model (i.e. how many parameters it has). *)
 
 (** {0 Configuration} *)
 

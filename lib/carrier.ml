@@ -2,6 +2,22 @@ open Containers
 
 type t = float
 
+let ( = ) = Float.equal
+let ( <= ) = Float.(<=)
+let ( < ) = Float.(<)
+let ( >= ) = Float.(>=)
+let ( > ) = Float.(>)
+let ( <> ) = Float.(<>)
+
+let ( + ) = Float.(+)
+let ( - ) = Float.(-)
+let ( * ) = Float.( * )
+let ( / ) = Float.(/)
+
+let zero = 0.0
+
+let abs = Float.abs
+
 let of_string s = 
   try
     Float.of_string_exn s
