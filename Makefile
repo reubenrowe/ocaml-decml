@@ -7,11 +7,13 @@ CLEAN := clean
 # Examples
 
 LINEAR_REGRESSION := examples/linear_regression.exe
+MULTIVARIATE_REGRESSION := examples/multivariate_regression.exe
 CONFIDENCE_INTERVAL := examples/confidence_interval.exe
 REGRESSION_MIXTURE := examples/regression_mixture.exe
 
 ALL_EXAMPLES := \
 	$(LINEAR_REGRESSION) \
+	$(MULTIVARIATE_REGRESSION) \
 	$(CONFIDENCE_INTERVAL) \
 	$(REGRESSION_MIXTURE)
 
