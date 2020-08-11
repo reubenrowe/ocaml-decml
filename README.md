@@ -42,9 +42,10 @@ parameter collections from which they were decoupled.
 DecML depends on the following OCaml packages:
 
 * `ocaml-migrate-parsetree`
-* `jbuilder`
+* `dune`
 * `containers`
-* `csv`
+* `csv` (only needed for running examples)
+* `gnuplot` (only needed for running examples)
 * `opam-installer` (if installing the package via OPAM)
 
 The PPX preprocessor is written using the `ocaml-migrate-parsetree` package, and
