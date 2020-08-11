@@ -45,7 +45,7 @@ let confidence_interval f data =
   let ds = 
     List.filter 
       (fun (x, y) -> 
-        let z, z' = fst (f x), snd (f x) in
+        let z, z' = f x in
         (z < y && z' < y) || (z > y && z' > y))
       (data) in
   let avg_mse = (mse (f %> fst) ds +. mse (f %> snd) ds) /. 2.0 in
