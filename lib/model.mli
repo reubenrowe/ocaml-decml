@@ -78,7 +78,7 @@ module Parameters : sig
   val plus : 'a t -> 'a t -> 'a t
   (** Pointwise addition of two parameter vectors. *)
 
-  val sum : 'a t list -> 'a t Option.t
+  val sum : 'a t list -> 'a t Containers.Option.t
   (** Sum of a list of parameter vectors. Returns None if the input list is
       empty. *)
 
@@ -88,7 +88,7 @@ module Parameters : sig
   val times : 'a t -> 'a t -> 'a t
   (** Pointwise multiplication of two parameter vectors. *)
 
-  val product : 'a t list -> 'a t Option.t
+  val product : 'a t list -> 'a t Containers.Option.t
   (** Product of a list of parameter vectors. Returns None if the input list is
       empty. *)
 

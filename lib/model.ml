@@ -145,7 +145,7 @@ let rebind_open
   | Boxed M model -> fun ctxt -> model (params, ctxt)
   | Lifted f -> fun () -> f
 
-let dimension (Ex (_, P ps)) =
+let dimension (Ex (_, Parameters.P ps)) =
   Map.cardinal ps
 
 let default_constant = ref 0.0
