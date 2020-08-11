@@ -11,7 +11,7 @@ install: ["dune" "install"]
 depends: [
   "dune" {build & >= "1.0"}
   "ocaml-migrate-parsetree" {build}
-  "containers" {build}
+  "containers" {build & >= "3.0"}
   "csv" {build}
   "opam-installer" {install}
 ]

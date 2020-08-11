@@ -14,7 +14,7 @@ let data =
   get_data
     ((List.rev_map float_of_string)
       %> hd_tl
-      %> map2 (fun x -> 1.0 :: x)
+      %> map_snd (fun x -> 1.0 :: x)
       %> swap)
   
 let (training_data, test_data) =

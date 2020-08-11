@@ -363,7 +363,7 @@ let rec rewriter config cookies scope =
                 (fun (vb, payload) -> 
                   match Option.get_exn vb with
                   | { pvb_pat = { ppat_desc = Ppat_var { txt; _ }; _ }; _ } ->
-                    (Pair.map1 Option.get_exn payload), txt
+                    (Pair.map_fst Option.get_exn payload), txt
                   | _ -> assert false) 
                 (bindings) in
             let_bind
