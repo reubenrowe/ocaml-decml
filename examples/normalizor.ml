@@ -5,11 +5,6 @@ let head_drop lst =
   |h::t -> t
 ;;
 
-let data_1 = Csv.load "bh.csv"
-let headers = List.hd data_1
-let data_2 = List.tl data_1
-let data = Csv.transpose data_2
-;;
 (*Collection of useful methods to compose and test our normalization*)
 let string_float_1 list = 
   List.map string_of_float list
