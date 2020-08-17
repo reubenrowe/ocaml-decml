@@ -9,6 +9,14 @@
   (pps decml.ppx)))
 
 (alias
+ (name examples)
+ (deps
+  linear_regression.exe
+  multivariate_regression.exe
+  regression_mixture.exe
+  confidence_interval.exe))
+
+(alias
  (name linear_regression_demo)
  (deps
   (:< linear_regression.exe)
