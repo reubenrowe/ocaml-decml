@@ -92,6 +92,9 @@ let feed_forward_layer data weights bias =
    Array.map2 (feed_forward_neuron data) weights bias 
 ;;
 
+let feed_forward_network data weights bias  =
+  List.fold_left2 feed_forward_layer data weights bias 
+;;
 (*Accumulate the outputs of each layer for the feed forward process*)
 let rec output_accumulator data weights bias = 
   let weights_head = List.hd weights in
@@ -110,29 +113,89 @@ let rec output_accumulator data weights bias =
     print_string "\n";
    (data_1)::output_accumulator data_1 t t1
 ;; 
+(*Feed forward over the entire network*)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 let error_accumulator_0 (ff_results:float array list)
  (weights:float array array list)
- (bias:float array list)
   (label:float array) =
-    let network_output = List.hd (List.rev ff_results) in
+    let network_output = List.hd (ff_results) in
      let first_error = Array.map2 (-.) network_output label in
   first_error::[]
-;;
+;;List.tl
 let error_accumulator_1 (ff_result:float array)
 (weights:float array array)
 (error:float array ) = 
   let stretched_error = Array.make 1 error in
-  let product_t = matrix_multiply weights stretched_error in 
+  let product_t = matrix_multiply stretched_error weights in 
+  print_string "Product_t has dimension ";
+  print_int (Array.length product_t.(0));
+  print_string "\n";
   let input = Array.map (fun f -> 1. -. f) ff_result in 
   let stretched_input = Array.make 1 input in 
   let stretched_ff_result = Array.make 1 ff_result in
   let output_der = elem_wise_mat_mult stretched_ff_result stretched_input in
-  elem_wise_mat_mult product_t output_der
+  print_string "Output_der has dimension ";
+  print_int (Array.length output_der.(0));
+  print_string "\n";
+  (elem_wise_mat_mult product_t output_der).(0)
 ;;
-(*Feed forward over the entire network*)
-let feed_forward_network data weights bias  =
-  List.fold_left2 feed_forward_layer data weights bias 
+let rec error_accumulator_2 (ff_results:float array list)
+(weights:float array array list)
+(error:float array) =
+  match ff_results, weights with
+  | [], [] -> []
+  | h::t, [] -> invalid_arg "Different list lengths (In error_acc)"
+  | [], h::t -> []
+  | h::t, h1::t1 -> let error_res = error_accumulator_1 h h1 error in
+    print_string("Pending successful appending...");
+    (error_res)::error_accumulator_2 t t1 error_res
 ;;
+let error_accumulator_4 (ff_results:float array list)
+(weights:float array array list)
+(error:float array) =
+  let ff_results_t = List.tl ff_results in 
+  error_accumulator_2 ff_results_t weights error
+;;
+let error_accumulator_3 (ff_results:float array list)
+(weights:float array array list)
+(label:float array) = 
+  let reversed_ff = List.rev ff_results in
+  let reversed_weights = List.rev weights in
+  let first_err = List.hd (error_accumulator_0 reversed_ff reversed_weights label) in
+  let err_list = error_accumulator_4 reversed_ff reversed_weights first_err in
+  print_int(List.length err_list);
+  first_err::(err_list)
+;;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
 (*TESTING CODE....*)
 let head_dimension list = 
@@ -149,17 +212,9 @@ let () =
   let network_result = feed_forward_network data weights biases in
 
 
-
   let ff_results = output_accumulator data weights biases in
-  let middle_output = List.hd ff_results in
-  let weight_mat = List.hd(List.rev weights) in
-  print_int (Array.length middle_output);
-  let error_result = Array.map (fun f -> 1.0 -. f) network_result in 
-
-
-  let first_err = error_accumulator_1 middle_output weight_mat error_result in
-  let e_a_test = error_accumulator_0 ff_results weights biases label in
-
+  let error_result = Array.map2 (-.) network_result label in 
+  let err_results = error_accumulator_3 (ff_results) (weights) error_result in
   print_string "\n";
-  print_float((List.hd e_a_test).(0))
+  print_int(Array.length (List.hd (List.rev err_results)))
 ;;
