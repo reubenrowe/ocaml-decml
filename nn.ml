@@ -272,6 +272,8 @@ let head_dimension list =
 let () = 
   (*Define the dimension of your network*)
   let network_1 = [3;4;1] in
+  let weights = weights_gen network_1 in
+  let biases = bias_gen network_1 in 
 
   (*Then, generate static data to test learning behaviour. The output should eventually match the label*)
   (*Below, the input layer takes an array that contains three lots of 0.5, and overfits on an approximation of pi*)
@@ -281,8 +283,7 @@ let () =
   let labels = Array.to_list labels_1 in
   let datas_1 = Array.make 500 data in
   let datas = Array.to_list datas_1 in
-  let weights = weights_gen network_1 in
-  let biases = bias_gen network_1 in 
+ 
 
   (*Finally, test that the NN learns by running train*)
   train 0.1 datas weights biases labels 
