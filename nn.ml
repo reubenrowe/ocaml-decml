@@ -186,15 +186,13 @@ let rec error_accumulator_2 (ff_results:float array list)
   | h::t, [] -> invalid_arg "Different list lengths (In error_acc)"
   | [], h::t -> []
   | h::t, h1::t1 -> let error_res = error_accumulator_1 h h1 error in
-
     (error_res)::error_accumulator_2 t t1 error_res
 ;;
 let error_accumulator_4 (ff_results:float array list)
 (weights:float array array list)
 (error:float array) =
   let ff_results_t = List.tl ff_results in 
-  let ff_results_t1 = List.tl (List.rev ff_results_t) in
-  error_accumulator_2 ff_results_t1 weights error
+  error_accumulator_2 ff_results_t weights error
 ;;
 let error_accumulator_3 (ff_results:float array list)
 (weights:float array array list)
@@ -218,7 +216,7 @@ let weight_delta (learning_rate: float) (error: float array) (output:float array
 ;;
 let rec weight_updater_1 (learning_rate: float) (errors: float array list) (outputs: float array list) = 
   match errors, outputs with
-  |[], [] -> []
+  | [], [] -> []
   | h::t, [] -> invalid_arg "Different list lengths in weight_updater"
   | [], h::t  -> invalid_arg "Different list lengths in weight_updater"
   | h::t, h1::t1 -> let delta_i = weight_delta learning_rate h h1 in
@@ -230,7 +228,8 @@ let weight_updater_2 (learning_rate:float) (errors:float array list) (outputs: f
 ;;
 
 let weight_updater_3 (learning_rate:float) (errors:float array list) (outputs:float array list) =
-  let first = weight_updater_2 learning_rate errors outputs in 
+  let errors_t = List.rev (List.tl (List.rev errors )) in
+  let first = weight_updater_2 learning_rate errors_t outputs in 
   List.rev first
 ;;
 (*Execute the above in order to update the weights*)
@@ -271,20 +270,34 @@ let head_dimension list =
 ;;
 let () = 
   (*Define the dimension of your network*)
-  let network_1 = [3;4;1] in
+  let network_1 = [3;50;4;2;1] in
   let weights = weights_gen network_1 in
   let biases = bias_gen network_1 in 
 
   (*Then, generate static data to test learning behaviour. The output should eventually match the label*)
   (*Below, the input layer takes an array that contains three lots of 0.5, and overfits on an approximation of pi*)
-  let label = Array.make 1 0.314159 in 
+  let label = Array.make 1 0.314159 in
   let data = Array.make 3 0.5 in
+
+
+  let ff_results = output_accumulator_2 data weights biases in
+  let network_output = feed_forward_network data weights biases in
+  print_int (Array.length network_output); print_string "\n";
+  let error = Array.map2 (-.) label network_output in
+  let error_acc = error_accumulator_3 ff_results weights error in
+  
+
   let labels_1 = Array.make 500 label in
   let labels = Array.to_list labels_1 in
   let datas_1 = Array.make 500 data in
   let datas = Array.to_list datas_1 in
- 
+
+  print_string ("Training is beginning...");
+  let tron = 
+    train 0.1 datas weights biases labels in
+    tron
+  
 
   (*Finally, test that the NN learns by running train*)
-  train 0.1 datas weights biases labels 
+ 
 ;; 
